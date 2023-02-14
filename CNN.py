@@ -13,10 +13,10 @@ class CNNnet(torch.nn.Module):
             torch.nn.Conv2d(16, 32, 3, 2, 1), torch.nn.BatchNorm2d(32),
             torch.nn.ReLU())
         self.conv3 = torch.nn.Sequential(
-            torch.nn.Conv2d(32, 64, 3, 2, 1), torch.nn.BatchNorm2d(32),
+            torch.nn.Conv2d(32, 64, 3, 2, 1), torch.nn.BatchNorm2d(64),
             torch.nn.ReLU())
         self.conv4 = torch.nn.Sequential(
-            torch.nn.Conv2d(64, 64, 2, 2, 0), torch.nn.BatchNorm2d(32),
+            torch.nn.Conv2d(64, 64, 2, 2, 0), torch.nn.BatchNorm2d(64),
             torch.nn.ReLU())
         # in_features, out_features
         self.mlp1 = torch.nn.Linear(2 * 2 * 64, 100)
