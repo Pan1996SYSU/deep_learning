@@ -1,12 +1,3 @@
-<style>
-.center 
-{
-  width: auto;
-  display: table;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
 <b>
 <p align="center"><font face="微软雅黑" size=6 color="gray">表1 CNNnet类结构</font></p>
 </b>
