@@ -53,7 +53,6 @@ for epoch in range(5):
         if i % 20 == 0:
             loss_count.append(loss)
             print('{}:\t'.format(i), loss.item())
-            torch.save(model, rf'.\pth\{i}')
         if i % 100 == 0:
             for a, b in test_loader:
                 test_x = Variable(a)
@@ -64,7 +63,9 @@ for epoch in range(5):
                 accuracy = torch.max(out, 1)[1].numpy() == test_y.numpy()
                 print('accuracy:\t', accuracy.mean())
                 break
+    torch.save(model, rf'.\pth\{epoch}.pth')
 plt.figure('PyTorch_CNN_Loss')
-plt.plot(loss_count, label='Loss')
+loss = [l.detach().numpy() for l in loss_count]
+plt.plot(loss, label='Loss')
 plt.legend()
 plt.show()
