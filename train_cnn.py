@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torchvision
 from torch.autograd import Variable
@@ -7,13 +6,6 @@ from torch.utils import data
 from torchvision.datasets import mnist
 
 from CNN import CNNnet
-
-
-def one_hot(data):
-    hot = np.zeros([10])
-    hot[data] = 1
-    return hot
-
 
 # 数据集的预处理
 data_tf = torchvision.transforms.Compose(
