@@ -30,7 +30,9 @@ for i, (test_x, test_y) in enumerate(test_loader):
     print(f'Iteration: {i}\nAccuracy: {round(accuracy.mean() * 100, 2)}%')
     print(f'-------------------------')
 
-print(f'Final Accuracy: {round(sum(accuracy_sum) / len(accuracy_sum) * 100, 2)}%')
+print(
+    f'Final Accuracy: {round(sum(accuracy_sum) / len(accuracy_sum) * 100, 2)}%'
+)
 
 plt.figure('Accuracy')
 plt.plot(accuracy_sum, 'o', label='accuracy')
