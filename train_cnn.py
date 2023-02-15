@@ -7,7 +7,6 @@ from torchvision.datasets import mnist
 
 from CNN import CNNnet
 
-# 数据集的预处理
 data_tf = torchvision.transforms.Compose(
     [
         torchvision.transforms.ToTensor(),
@@ -15,13 +14,13 @@ data_tf = torchvision.transforms.Compose(
     ])
 
 data_path = r'.\DATA'
-# 获取数据集
+
 train_data = mnist.MNIST(
     data_path, train=True, transform=data_tf, download=False)
 test_data = mnist.MNIST(
     data_path, train=False, transform=data_tf, download=False)
 
-train_loader = data.DataLoader(train_data, batch_size=128, shuffle=True)
+train_loader = data.DataLoader(train_data, batch_size=300, shuffle=True)
 test_loader = data.DataLoader(test_data, batch_size=100, shuffle=True)
 
 model = CNNnet()
@@ -32,28 +31,31 @@ opt = torch.optim.Adam(model.parameters(), lr=0.001)
 loss_count = []
 for epoch in range(5):
     for i, (x, y) in enumerate(train_loader):
-        batch_x = Variable(x)  # torch.Size([128, 1, 28, 28])
-        batch_y = Variable(y)  # torch.Size([128])
-        # 获取最后输出
+        # [128, 1, 28, 28]->[128, 16, 14, 14]->[128, 32, 7, 7]->[128, 64, 4, 4]->
+        # [128, 64, 2, 2]->[128, 256]->[128, 100]->[128, 10]
+        batch_x = Variable(x)
+        # [128]
+        batch_y = Variable(y)
+        # [128,10]
         out = model(batch_x)  # torch.Size([128,10])
-        # 获取损失
         loss = loss_func(out, batch_y)
-        # 使用优化器优化损失
-        opt.zero_grad()  # 清空上一步残余更新参数值
-        loss.backward()  # 误差反向传播，计算参数更新值
-        opt.step()  # 将参数更新值施加到net的parmeters上
-        if i % 20 == 0:
+        # 清空上一步残余更新参数值
+        opt.zero_grad()
+        loss.backward()
+        # 将参数更新值施加到net的parameters上
+        opt.step()
+        if i % 10 == 0:
             loss_count.append(loss)
-            print('{}:\t'.format(i), loss.item())
         if i % 100 == 0:
             for a, b in test_loader:
                 test_x = Variable(a)
                 test_y = Variable(b)
                 out = model(test_x)
-                # print('test_out:\t',torch.max(out,1)[1])
-                # print('test_y:\t',test_y)
                 accuracy = torch.max(out, 1)[1].numpy() == test_y.numpy()
-                print('accuracy:\t', accuracy.mean())
+                print(
+                    f'Epoch: {epoch}\nIteration: {i}\nAccuracy: {accuracy.mean() * 100}%'
+                )
+                print(f'-------------------------')
                 break
     torch.save(model, rf'.\pth\{epoch}.pth')
 plt.figure('PyTorch_CNN_Loss')
