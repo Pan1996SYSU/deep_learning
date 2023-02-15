@@ -38,7 +38,7 @@ for epoch in range(5):
         # [128]
         batch_y = Variable(y)
         # [128,10]
-        out = model(batch_x)  # torch.Size([128,10])
+        out = model(batch_x)
         loss = loss_func(out, batch_y)
         # 清空上一步残余更新参数值
         opt.zero_grad()
@@ -58,7 +58,7 @@ for epoch in range(5):
                 )
                 print(f'-------------------------')
                 break
-    torch.save(model, rf'.\pth\{epoch}.pth')
+    torch.save(model, rf'.\pth\CNN_{epoch}.pth')
 plt.figure('PyTorch_CNN_Loss')
 loss = [l.detach().numpy() for l in loss_count]
 plt.plot(loss, label='Loss')
