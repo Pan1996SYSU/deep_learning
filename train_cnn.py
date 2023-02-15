@@ -24,6 +24,7 @@ train_loader = data.DataLoader(train_data, batch_size=300, shuffle=True)
 test_loader = data.DataLoader(test_data, batch_size=100, shuffle=True)
 
 model = CNNnet()
+# model = torch.load(r'.\pth\4.pth')
 
 loss_func = torch.nn.CrossEntropyLoss()
 opt = torch.optim.Adam(model.parameters(), lr=0.001)
