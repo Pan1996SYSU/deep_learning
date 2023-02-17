@@ -165,7 +165,7 @@ for epoch in range(5):
                 test_x = Variable(a)
                 test_y = Variable(b)
                 out = model(test_x)
-                accuracy = torch.max(out, 1)[1].numpy() == torch.max(test_y, 1).numpy()
+                accuracy = torch.max(out, 1)[1].numpy() == torch.max(test_y, 1)[1].numpy()
                 print(
                     f'Epoch: {epoch}\nIteration: {i}\nAccuracy: {accuracy.mean() * 100}%'
                 )
