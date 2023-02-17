@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 
 import cv2
@@ -39,8 +40,10 @@ train_path = r"C:\Users\MasterZ\Desktop\cat-dog-all-data\test-dataset\train"
 test_path = r"C:\Users\MasterZ\Desktop\cat-dog-all-data\test-dataset\test"
 train_path_list = glob_extensions(train_path)
 test_path_list = glob_extensions(test_path)
+random.shuffle(train_path_list)
+random.shuffle(test_path_list)
 i = 0
-for path in train_path_list[:1000]:
+for path in train_path_list:
     path = Path(path)
     img = cv_imread(path)
     img = cv2.resize(img, (401, 401))
@@ -60,7 +63,7 @@ for path in train_path_list[:1000]:
             y = y.to(torch.float32)
             batch_y = y
         i += 1
-    elif i < 19:
+    elif i < 49:
         if path.parent.name == 'cat':
             y = torch.tensor([1, 0])
             y = torch.unsqueeze(torch.as_tensor(y), dim=0)
@@ -108,11 +111,11 @@ for path in test_path_list[:1000]:
             batch_y = y
         else:
             y = torch.tensor([0, 1])
-            y = torch.unsqueeze(torch.tensor(y), dim=0)
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
             y = y.to(torch.float32)
             batch_y = y
         i += 1
-    elif i < 19:
+    elif i < 49:
         if path.parent.name == 'cat':
             y = torch.tensor([1, 0])
             y = torch.unsqueeze(torch.as_tensor(y), dim=0)
