@@ -39,37 +39,114 @@ train_path = r"C:\Users\MasterZ\Desktop\cat-dog-all-data\test-dataset\train"
 test_path = r"C:\Users\MasterZ\Desktop\cat-dog-all-data\test-dataset\test"
 train_path_list = glob_extensions(train_path)
 test_path_list = glob_extensions(test_path)
-for path in train_path_list[:100]:
+i = 0
+for path in train_path_list[:1000]:
     path = Path(path)
     img = cv_imread(path)
     img = cv2.resize(img, (401, 401))
     img = np.transpose(img, (2, 0, 1))
     img = torch.unsqueeze(torch.tensor(img), dim=0)
     img = img.to(torch.float32)
-    if path.parent.name == 'cat':
-        train_loader.append([img, torch.tensor([1, 0])])
+    if i == 0:
+        batch_img = img
+        if path.parent.name == 'cat':
+            y = torch.tensor([1, 0])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_y = y
+        else:
+            y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_y = y
+        i += 1
+    elif i < 19:
+        if path.parent.name == 'cat':
+            y = torch.tensor([1, 0])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        else:
+            y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        i += 1
     else:
-        train_loader.append([img, torch.tensor([0, 1])])
+        if path.parent.name == 'cat':
+            y = torch.tensor([1, 0])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        else:
+            y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        train_loader.append([batch_img, batch_y])
+        i = 0
 
-for path in test_path_list[:100]:
+i = 0
+
+for path in test_path_list[:1000]:
     path = Path(path)
     img = cv_imread(path)
     img = cv2.resize(img, (401, 401))
     img = np.transpose(img, (2, 0, 1))
     img = torch.unsqueeze(torch.tensor(img), dim=0)
     img = img.to(torch.float32)
-    if path.parent.name == 'cat':
-        test_loader.append([torch.tensor(img), torch.tensor([1, 0])])
+    if i == 0:
+        batch_img = img
+        if path.parent.name == 'cat':
+            y = torch.tensor([1, 0])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_y = y
+        else:
+            y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_y = y
+        i += 1
+    elif i < 19:
+        if path.parent.name == 'cat':
+            y = torch.tensor([1, 0])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        else:
+            y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        i += 1
     else:
-        test_loader.append([torch.tensor(img), torch.tensor([0, 1])])
+        if path.parent.name == 'cat':
+            y = torch.tensor([1, 0])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        else:
+            y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            batch_y = torch.cat((batch_y, y))
+        test_loader.append([batch_img, batch_y])
+        i = 0
 
 loss_count = []
 for epoch in range(5):
     for i, (x, y) in enumerate(train_loader):
         # [128, 1, 28, 28]->[128, 16, 14, 14]->[128, 32, 7, 7]->[128, 64, 4, 4]->
         # [128, 64, 2, 2]->[128, 256]->[128, 100]->[128, 10]
-        y = torch.unsqueeze(torch.tensor(y), dim=0)
-        y = y.to(torch.float32)
         batch_x = Variable(x)
         # [128]
         batch_y = Variable(y)
@@ -85,12 +162,10 @@ for epoch in range(5):
             loss_count.append(loss)
         if i % 100 == 0:
             for a, b in test_loader:
-                b = torch.unsqueeze(torch.tensor(b), dim=0)
-                b = b.to(torch.float32)
                 test_x = Variable(a)
                 test_y = Variable(b)
                 out = model(test_x)
-                accuracy = torch.max(out, 1)[1].numpy() == test_y.numpy()
+                accuracy = torch.max(out, 1)[1].numpy() == torch.max(test_y, 1).numpy()
                 print(
                     f'Epoch: {epoch}\nIteration: {i}\nAccuracy: {accuracy.mean() * 100}%'
                 )
