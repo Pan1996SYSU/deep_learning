@@ -3,6 +3,13 @@ from utils_func import cv_imread, glob_extensions
 train_path = r"C:\Users\MasterZ\Desktop\cat-dog-all-data\test-dataset\train"
 test_path = r"C:\Users\MasterZ\Desktop\cat-dog-all-data\test-dataset\test"
 
+'''
+train_max_h:768, train_min_h:32
+train_max_w:1050, train_min_w:42
+test_max_h:500, test_min_h:49
+test_max_w:500, test_min_w:60
+'''
+
 train_path_list = glob_extensions(train_path)
 test_path_list = glob_extensions(test_path)
 
@@ -21,8 +28,8 @@ for path in train_path_list:
         min_h = h
     if w < min_w:
         min_w = w
-print(f'train_max_h:{max_h} train_min_h{min_h}')
-print(f'train_max_w:{max_w} train_min_w{min_w}')
+print(f'train_max_h:{max_h}, train_min_h:{min_h}')
+print(f'train_max_w:{max_w}, train_min_w:{min_w}')
 max_h = 0
 max_w = 0
 min_h = 9999
@@ -38,5 +45,5 @@ for path in test_path_list:
         min_h = h
     if w < min_w:
         min_w = w
-print(f'test_max_h:{max_h} test_min_h{min_h}')
-print(f'test_max_w:{max_w} test_min_w{min_w}')
+print(f'test_max_h:{max_h}, test_min_h:{min_h}')
+print(f'test_max_w:{max_w}, test_min_w:{min_w}')
