@@ -162,7 +162,6 @@ def labelme2coco(
 
             if not os.path.exists(json_path):  # OK 样本
                 continue
-            json_filename = os.path.split(json_path)[-1]
             with open(json_path, encoding='utf-8') as f:
                 data = json.load(f)
 
@@ -245,12 +244,14 @@ def labelme2coco(
 
 
 def cv_imread(file_path):
+    # 支持读
     cv_img = cv2.imdecode(
         np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
     return cv_img
 
 
 def cv_imread2(file_path):
+    # 支持看
     if os.path.exists(file_path):
         if Path(file_path).suffix == '.png':
             cv_img = cv2.imdecode(
