@@ -1,59 +1,278 @@
-import inspect
+import json
+import os
+from glob import glob
+from pathlib import Path
 import json
 import logging
 import os
-import platform
-import sys
-import time
-import warnings
-from collections import defaultdict
-from datetime import date
-from enum import Enum
-from glob import glob
-from pathlib import Path
+import shutil
+import traceback
+from collections import Counter
 
+import cv2
+import math
+import numpy as np
+from tqdm import tqdm
 import cv2
 import numpy as np
 import yaml
-from PIL import Image, ImageFont, ImageDraw
-from PyQt5 import QtWidgets, QtCore, Qt
-from PyQt5.QtCore import QFileInfo
-from natsort import os_sorted
-
-from sonic.lib.get_img_size import get_img_size
+from PIL import Image
 
 extensions = {'.bmp', '.gif', '.jpeg', '.jpg', '.pbm', '.png', '.tif', '.tiff'}
 
 
-def cv2_read_img(file_path):
+def get_circle(p1, p2, p3):
+    temp = p2[0] * p2[0] + p2[1] * p2[1]
+    bc = (p1[0] * p1[0] + p1[1] * p1[1] - temp) / 2
+    cd = (temp - p3[0] * p3[0] - p3[1] * p3[1]) / 2
+    det = (p1[0] - p2[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p2[1])
+
+    if abs(det) < 1.0e-6:
+        return None, -1
+
+    cx = (bc * (p2[1] - p3[1]) - cd * (p1[1] - p2[1])) / det
+    cy = ((p1[0] - p2[0]) * cd - (p2[0] - p3[0]) * bc) / det
+    radius = np.sqrt((cx - p1[0]) ** 2 + (cy - p1[1]) ** 2)
+    cx, cy, radius = cx, cy, radius
+
+    return (cx, cy), radius
+
+
+def cv_simplify_polygon(points_list, simplify_level: int = 1) -> np.ndarray:
     """
-    读图函数
-    :param file_path: 图片路径
-    :return: 图片变量-array
+    :param simplify_level: 简化等级
+    :param points_list: list类型，多边形的各个顶点,值越大，简化出来的点越少
+    :return:points_list
     """
+    polygon_vertex_2d = np.array(points_list, np.float32)
+    x, y = polygon_vertex_2d.min(axis=0)
+    w, h = polygon_vertex_2d.max(axis=0) - [x, y]
+    w2, h2 = 500, 500
+    polygon_vertex_2d -= [[x, y]]
+    polygon_vertex_2d /= [[w / w2, h / h2]]
+    polygon_vertex_2d = polygon_vertex_2d.astype(np.int32)
+
+    img = np.zeros((h2, w2), dtype=np.uint8)
+
+    cv2.fillPoly(img, [polygon_vertex_2d], 255)
+
+    contours, hierarchy = cv2.findContours(img, 1, 2)
+    cnt = contours[-1]
+
+    approx = cv2.approxPolyDP(cnt, simplify_level, True)
+    approx = approx[:, 0]
+
+    approx = approx.astype(np.float32)
+    approx *= [[w / w2, h / h2]]
+    approx += [[x, y]]
+    approx = approx.astype(np.int32)
+    return approx
+
+
+def shape_to_points(shape):
+    new_points = []
+    try:
+        # 从json中获取数据
+        shape_type = shape['shape_type']
+        points = shape['points']
+    except:
+        # 直接从Labelme中获取数据
+        shape_type = shape.shape_type
+        points = shape.getPointsPos()
+    if shape_type == 'polygon':
+        new_points = points
+        if len(points) < 3:
+            new_points = []
+            print('polygon 异常，少于三个点', shape)
+    elif shape_type == 'rectangle':
+        (x1, y1), (x2, y2) = points
+        x1, x2 = sorted([x1, x2])
+        y1, y2 = sorted([y1, y2])
+        new_points = [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
+    elif shape_type == "circle":
+        # Create polygon shaped based on connecting lines from/to following degress
+        bearing_angles = [
+            0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210,
+            225, 240, 255, 270, 285, 300, 315, 330, 345, 360
+        ]
+
+        orig_x1 = points[0][0]
+        orig_y1 = points[0][1]
+
+        orig_x2 = points[1][0]
+        orig_y2 = points[1][1]
+
+        # Calculate radius of circle
+        radius = math.sqrt((orig_x2 - orig_x1)**2 + (orig_y2 - orig_y1)**2)
+
+        circle_polygon = []
+
+        for i in range(0, len(bearing_angles) - 1):
+            ad1 = math.radians(bearing_angles[i])
+            x1 = radius * math.cos(ad1)
+            y1 = radius * math.sin(ad1)
+            circle_polygon.append((orig_x1 + x1, orig_y1 + y1))
+
+            ad2 = math.radians(bearing_angles[i + 1])
+            x2 = radius * math.cos(ad2)
+            y2 = radius * math.sin(ad2)
+            circle_polygon.append((orig_x1 + x2, orig_y1 + y2))
+
+        new_points = circle_polygon
+    elif shape_type == 'point':
+        new_points = points
+    else:
+        print('未知 shape_type', shape['shape_type'])
+
+    new_points = np.asarray(new_points, dtype=np.int32)
+    return new_points
+
+
+def labelme2coco(
+        json_path_list,
+        new_img_dir,
+        category_map,
+        category_list,
+        copy=True,
+        queue=None,
+        prograss_start=0,
+        prograss_end=100,
+        overwrite=False,
+        add_subdir=True):
+    """
+    :param json_path_list: json 文件名列表
+    :param new_img_dir: 目标图片文件夹路径
+    :param category_map: labelme 分类列表（abcdefg）
+    :param category_list: coco 分类列表（脏污、黑点等）
+    :param copy:
+    :return:
+    """
+    annotations = []
+    images = []
+    obj_count = 0
+    with tqdm(json_path_list, desc='labelme2coco') as pbar:
+        bar_stepcount = len(pbar)
+        bar_step = prograss_end - prograss_start
+        bar_step *= 1.00
+        bar_step /= bar_stepcount
+        for idx, json_path in enumerate(pbar):
+            if queue is not None:
+                queue.put(
+                    {
+                        'func': 'progress_update',
+                        'color': 2,
+                        'val': prograss_start + idx * bar_step
+                    })
+
+            if not os.path.exists(json_path):  # OK 样本
+                continue
+            json_filename = os.path.split(json_path)[-1]
+            with open(json_path, encoding='utf-8') as f:
+                data = json.load(f)
+
+            old_dir = os.path.split(json_path)[0]
+            img_path = f"{old_dir}/{data['imagePath']}"
+            if not os.path.exists(img_path):
+                logging.error(f'图片文件不存在：{img_path}')
+                continue
+
+            if add_subdir:
+                subdir = os.path.split(old_dir)[-1]
+                new_img_path = f"{new_img_dir}/{subdir}_{data['imagePath']}"
+            else:
+                new_img_path = f"{new_img_dir}/{data['imagePath']}"
+            if copy:
+                try:
+                    if overwrite or not os.path.exists(new_img_path):
+                        new_img_path.replace('\\', '/')
+                        shutil.copy(img_path, new_img_path)
+                except:
+                    traceback.print_exc()
+                    print(f'拷贝文件失败：{img_path}')
+                    continue
+
+            img = cv_imread(new_img_path)
+            img_filename = os.path.split(new_img_path)[-1]
+            height, width = img.shape[:2]
+            images.append(
+                dict(
+                    id=idx, file_name=img_filename, height=height,
+                    width=width))
+
+            for shape in data['shapes']:
+                if shape['label'] not in category_map:
+                    print('发现未知标签', json_path, shape)
+                    continue
+
+                new_points = []
+                try:
+                    new_points = shape_to_points(shape)
+                except:
+                    logging.error(traceback.format_exc())
+
+                if len(new_points) == 0:
+                    print('解析 shape 失败', json_path, shape)
+                    continue
+
+                px = [x[0] for x in new_points]
+                py = [x[1] for x in new_points]
+                poly = new_points.flatten().tolist()
+                x_min, y_min, x_max, y_max = (
+                    min(px), min(py), max(px), max(py))
+
+                # 处理越界的 bbox
+                x_max = min(x_max, width - 1)
+                y_max = min(y_max, height - 1)
+
+                category_id = category_list.index(category_map[shape['label']])
+                data_anno = dict(
+                    image_id=idx,
+                    id=obj_count,
+                    category_id=category_id,
+                    bbox=[x_min, y_min, x_max - x_min, y_max - y_min],
+                    area=(x_max - x_min) * (y_max - y_min),
+                    segmentation=[poly],
+                    iscrowd=0)
+
+                annotations.append(data_anno)
+                obj_count += 1
+
+    categories = [{'id': i, 'name': x} for i, x in enumerate(category_list)]
+    coco_format_json = dict(
+        images=images, annotations=annotations, categories=categories)
+
+    # 统计分类
+    category_counter = Counter([x['category_id'] for x in annotations])
+    for k, v in category_counter.most_common():
+        print(category_list[k], v)
+    return coco_format_json
+
+
+def cv_imread(file_path):
     cv_img = cv2.imdecode(
         np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
     return cv_img
 
 
-cv_img_read = cv2_read_img
+def cv_imread2(file_path):
+    if os.path.exists(file_path):
+        if Path(file_path).suffix == '.png':
+            cv_img = cv2.imdecode(
+                np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_COLOR)
+        else:
+            cv_img = cv2.imdecode(
+                np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    else:
+        print(f'{file_path}文件不存在')
+        cv_img = np.zeros((3, 3, 3))
+    return cv_img
 
 
 def sorted_path_list(path_list):
-    """
-    文件名排序
-    :param path_list: 路径list
-    :return: 排序好的路径list
-    """
     return sorted(path_list, key=lambda path: os.path.normpath(path))
 
 
 def glob_extensions(directory: str, ext_names: list = extensions):
-    """
-    获取文件夹下所有图片路径
-    :param directory: 文件夹路径
-    :return: 所以图片路径 type-list
-    """
     path_list = []
     new_list = []
     if directory:
@@ -65,105 +284,12 @@ def glob_extensions(directory: str, ext_names: list = extensions):
     return sorted_path_list(new_list)
 
 
-class glob_model(Enum):
-    quickly = 0,
-    quickly_filter = 1,
-    normal = 2
-    safe = 3
-
-
-def glob_current_extensions(
-        directory: str,
-        ext_names: set = None,
-        model=glob_model.quickly_filter):
-    """
-    获取当前文件夹下的所有文件夹
-    """
-    if ext_names is None:
-        ext_names = extensions
-    new_extensions = ext_names
-
-    path_list = glob(f'{directory}/*', recursive=False)
-    path_list = sorted_path_list(path_list)
-    dir_list = list()
-    ext_list = list()
-
-    # 根据后缀名判断文件夹 这个模式最快 但是文件名中有  .  时就寄了  实测 1秒(5000 文件)
-    if model == glob_model.quickly:
-        for x in path_list:
-            pth_x = Path(x)
-            suffix = pth_x.suffix
-            if suffix == "":
-                dir_list.append(x)
-                continue
-            if suffix in new_extensions:
-                ext_list.append(x)
-                continue
-
-    # 根据 后缀名-文件格式过滤 判断文件夹 这个模式快且有一定的保障 实测 1秒(5000 文件)
-    if model == glob_model.quickly_filter:
-        file = QFileInfo()
-        for x in path_list:
-            file.setFile(x)
-            suffix = file.suffix()
-
-            if "." + suffix in new_extensions:
-                ext_list.append(x)
-                continue
-
-            if suffix == "" or not suffix.isalnum() or file.isDir():
-                dir_list.append(x)
-                continue
-
-    # QT提供的文件夹判断 实测 7秒(5000 文件)
-    if model == glob_model.normal:
-        info = QFileInfo()
-        for x in path_list:
-            info.setFile(x)
-            suffix = info.suffix()
-            if info.isDir():
-                dir_list.append(x)
-                continue
-            if "." + suffix in new_extensions:
-                ext_list.append(x)
-                continue
-
-    # python提供的文件夹判断 实测 10秒(5000 文件)
-    if model == glob_model.safe:
-        for x in path_list:
-            pth_x = Path(x)
-            suffix = pth_x.suffix
-            if Path.is_dir(pth_x):
-                dir_list.append(x)
-                continue
-            if suffix in new_extensions:
-                ext_list.append(x)
-                continue
-
-    return {"path_list": path_list, "dir_list": dir_list, "ext_list": ext_list}
-
-
 def make_dirs(path):
-    """
-    :path:需要创建的文件夹路径,当path是文件路径时，创建其父文件夹
-    :return:
-    """
     path = Path(path)
     if path.suffix:
-        warnings.warn(f'调用make_dirs函数不要传入文件路径!')
-        path_file = path
         path_dir = path.parent
     else:
         path_dir = path
-    if not os.path.exists(path_dir):
-        os.makedirs(path_dir, exist_ok=True)
-
-
-def make_dirs_2_(path_dir):
-    """
-    :path:只支持文件夹路径
-    :return:
-    """
     if not os.path.exists(path_dir):
         os.makedirs(path_dir, exist_ok=True)
 
@@ -180,11 +306,7 @@ def normalize_16bit_image(img_16):
     return img_16
 
 
-# debug函数
 def show_img(img):
-    """
-    显示array类型的图片
-    """
     if len(img.shape) < 3:
         new_img = Image.fromarray(img, 'L')
     else:
@@ -192,39 +314,19 @@ def show_img(img):
     new_img.show()
 
 
-def show_qpixmap(pixmap):
-    """
-    显示qpixmap图片
-    """
+def show_qt_pixmap(pixmap):
     img = Image.fromqpixmap(pixmap)
     img.show()
 
 
-def save_img(img: np.ndarray, img_path, src_img_format="rgb"):
-    """
-    保存图片为指定格式 转化BGR为RGB
-    """
+def save_img(img: np.ndarray, img_path):
     suffix = Path(img_path).suffix
-    img_channels = img.shape[-1]
-
-    if img.dtype != np.uint8 or src_img_format != 'rgb':
-        cv2.imencode(suffix, img)[1].tofile(img_path)
-    elif len(img.shape) == 3 and img_channels >= 3:
-        # 判断是否是3通道 或者以上的图
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imencode(suffix, img)[1].tofile(img_path)
-    else:
-        cv2.imencode(suffix, img)[1].tofile(img_path)
+    cv2.imencode(suffix, img)[1].tofile(img_path)
 
 
 def save_json(json_path, data):
-    """
-    保存json
-    :param json_path: 保存路径
-    :param data: 数据
-    """
     try:
-        make_dirs_2_(Path(json_path).parent)
+        make_dirs(Path(json_path).parent)
         with open(json_path, 'w', encoding='utf8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
     except:
@@ -232,11 +334,6 @@ def save_json(json_path, data):
 
 
 def load_json(json_path):
-    """
-    读取json数据
-    :param json_path: json路径
-    :return: json数据
-    """
     if not os.path.exists(json_path):
         raise FileNotFoundError(f'json文件不存在!\n'
                                 f'{json_path}')
@@ -253,13 +350,8 @@ def load_json(json_path):
 
 
 def save_yaml(yaml_path, data):
-    """
-    保存yaml
-    :param yaml_path: 保存路径
-    :param data: 数据
-    """
     try:
-        make_dirs_2_(Path(yaml_path).parent)
+        make_dirs(Path(yaml_path).parent)
         with open(yaml_path, 'w', encoding='utf8') as f:
             yaml.safe_dump(data, f, allow_unicode=True)
     except:
@@ -267,11 +359,6 @@ def save_yaml(yaml_path, data):
 
 
 def load_yaml(yaml_path):
-    """
-    读取yaml数据
-    :param yaml_path: yaml路径
-    :return: yaml内数据
-    """
     if not os.path.exists(yaml_path):
         raise FileNotFoundError(f'yaml文件不存在!\n'
                                 f'{yaml_path}')
@@ -287,63 +374,12 @@ def load_yaml(yaml_path):
     return data
 
 
-def get_right_value_dialog(
-        accept_condition_func,
-        default_text="",
-        prompt_text="提示: 请输入正确的值",
-        window_title="请输入正确的值",
-        parent=None,
-        default_return=''):
-    """
-    一个输入对话框, 根据 accept_condition_func来进行判断输入是否正确
-    accept_condition_func: 当 raise 与 return Flase时表示输入错误 当不抛出异常与 return True表示输入正确
-    例:
-        def func(value):
-            if value == "zzz":
-                raise "111"
-            else:
-                return True
-    """
-
-    import types
-    if not isinstance(accept_condition_func, types.FunctionType):
-        raise "弹窗的第一个参数不为函数"
-
-    ret_text = default_return
-    dialog_input = Qt.QDialog()
-    dialog_input.setWindowTitle(window_title)
-
-    def check_text():
-        result = False
-        try:
-            if not accept_condition_func(lineedit_input.text()):
-                raise "error"
-            result = True
-        except:
-            pass
-
-        button_accept.setEnabled(result)
-
-    def accept_text():
-        nonlocal ret_text
-        ret_text = lineedit_input.text()
-        dialog_input.close()
-
-    label_prompt = Qt.QLabel(prompt_text)
-    lineedit_input = Qt.QLineEdit(default_text)
-    lineedit_input.textChanged.connect(check_text)
-    button_accept = Qt.QPushButton("确定")
-    button_accept.setEnabled(False)
-    button_accept.clicked.connect(accept_text)
-    button_cancel = Qt.QPushButton("取消")
-    button_cancel.clicked.connect(dialog_input.close)
-
-    layout = Qt.QGridLayout()
-    layout.addWidget(label_prompt, 0, 0, 1, 4)
-    layout.addWidget(lineedit_input, 1, 0, 1, 4)
-    layout.addWidget(button_accept, 2, 2, 1, 1)
-    layout.addWidget(button_cancel, 2, 3, 1, 1)
-    dialog_input.setLayout(layout)
-    dialog_input.exec_()
-
-    return ret_text
+def pixmap_to_ndarray(pixmap):
+    image = pixmap.toImage()
+    size = image.size()
+    s = image.bits().asstring(
+        size.width() * (image.depth() // 8) * size.height())
+    ndarray = np.frombuffer(
+        s, dtype=np.uint8).reshape(
+            (size.height(), size.width(), image.depth() // 8))
+    return ndarray
