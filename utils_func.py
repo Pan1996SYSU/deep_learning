@@ -1,22 +1,18 @@
 import json
-import os
-from glob import glob
-from pathlib import Path
-import json
 import logging
+import math
 import os
 import shutil
 import traceback
 from collections import Counter
+from glob import glob
+from pathlib import Path
 
-import cv2
-import math
-import numpy as np
-from tqdm import tqdm
 import cv2
 import numpy as np
 import yaml
 from PIL import Image
+from tqdm import tqdm
 
 extensions = {'.bmp', '.gif', '.jpeg', '.jpg', '.pbm', '.png', '.tif', '.tiff'}
 
@@ -32,7 +28,7 @@ def get_circle(p1, p2, p3):
 
     cx = (bc * (p2[1] - p3[1]) - cd * (p1[1] - p2[1])) / det
     cy = ((p1[0] - p2[0]) * cd - (p2[0] - p3[0]) * bc) / det
-    radius = np.sqrt((cx - p1[0]) ** 2 + (cy - p1[1]) ** 2)
+    radius = np.sqrt((cx - p1[0])**2 + (cy - p1[1])**2)
     cx, cy, radius = cx, cy, radius
 
     return (cx, cy), radius
@@ -383,3 +379,34 @@ def pixmap_to_ndarray(pixmap):
         s, dtype=np.uint8).reshape(
             (size.height(), size.width(), image.depth() // 8))
     return ndarray
+
+
+def crop_json(json_data, x, y, w, h):
+    try:
+        json_data["imageHeight"] = h
+        json_data["imageWidth"] = w
+        for i, shape in enumerate(json_data["shapes"]):
+            points = np.array(shape['points'])
+            points[:, 0] = points[:, 0] - x
+            points[:, 1] = points[:, 1] - y
+            points[points[:, 0] >= w, 0] = w
+            points[points[:, 0] <= 0, 0] = 0
+            points[points[:, 1] >= h, 1] = h
+            points[points[:, 1] <= 0, 1] = 0
+            json_data["shapes"][i]['points'] = points.tolist()
+    except Exception as e:
+        logging.error(e)
+        logging.error(traceback.format_exc())
+        return {}
+    return json_data
+
+
+def crop_img(img, x, y, w, h):
+    try:
+        res_img = img[max(0, int(y)):min(int(y), h),
+                      max(0, int(x)):min(int(x), w)].copy()
+    except Exception as e:
+        logging.error(e)
+        logging.error(traceback.format_exc())
+        return np.zeros((3, 3, 3))
+    return res_img
