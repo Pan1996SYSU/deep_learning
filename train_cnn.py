@@ -44,16 +44,20 @@ for path in train_path_list[:100]:
     img = cv_imread(path)
     img = cv2.resize(img, (401, 401))
     img = np.transpose(img, (2, 0, 1))
+    img = torch.unsqueeze(torch.tensor(img), dim=0)
+    img = img.to(torch.float32)
     if path.parent.name == 'cat':
-        train_loader.append([torch.tensor(img), torch.tensor([1, 0])])
+        train_loader.append([img, torch.tensor([1, 0])])
     else:
-        train_loader.append([torch.tensor(img), torch.tensor([0, 1])])
+        train_loader.append([img, torch.tensor([0, 1])])
 
 for path in test_path_list[:100]:
     path = Path(path)
     img = cv_imread(path)
     img = cv2.resize(img, (401, 401))
-    mg = np.transpose(img, (2, 0, 1))
+    img = np.transpose(img, (2, 0, 1))
+    img = torch.unsqueeze(torch.tensor(img), dim=0)
+    img = img.to(torch.float32)
     if path.parent.name == 'cat':
         test_loader.append([torch.tensor(img), torch.tensor([1, 0])])
     else:
@@ -64,6 +68,8 @@ for epoch in range(5):
     for i, (x, y) in enumerate(train_loader):
         # [128, 1, 28, 28]->[128, 16, 14, 14]->[128, 32, 7, 7]->[128, 64, 4, 4]->
         # [128, 64, 2, 2]->[128, 256]->[128, 100]->[128, 10]
+        y = torch.unsqueeze(torch.tensor(y), dim=0)
+        y = y.to(torch.float32)
         batch_x = Variable(x)
         # [128]
         batch_y = Variable(y)
@@ -79,6 +85,8 @@ for epoch in range(5):
             loss_count.append(loss)
         if i % 100 == 0:
             for a, b in test_loader:
+                b = torch.unsqueeze(torch.tensor(b), dim=0)
+                b = b.to(torch.float32)
                 test_x = Variable(a)
                 test_y = Variable(b)
                 out = model(test_x)
