@@ -22,8 +22,8 @@ model = torch.load(r'.\pth\4.pth')
 accuracy_sum = []
 
 for i, (test_x, test_y) in enumerate(test_loader):
-    test_x = Variable(test_x)
-    test_y = Variable(test_y)
+    test_x = Variable(test_x.cuda[0])
+    test_y = Variable(test_y.cuda[0])
     out = model(test_x)
     accuracy = torch.max(out, 1)[1].numpy() == test_y.numpy()
     accuracy_sum.append(accuracy.mean())
