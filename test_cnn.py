@@ -23,7 +23,7 @@ from utils_func import glob_extensions, cv_imread
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = torch.load(r'.\pth\CNN_12.pth')
+model = torch.load(r'.\pth\CNN_11.pth')
 accuracy_sum = []
 
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
