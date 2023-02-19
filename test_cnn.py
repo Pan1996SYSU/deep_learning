@@ -1,24 +1,10 @@
 import random
 from pathlib import Path
-
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.autograd import Variable
-
-# data_tf = torchvision.transforms.Compose(
-#     [
-#         torchvision.transforms.ToTensor(),
-#         torchvision.transforms.Normalize([0.5], [0.5])
-#     ])
-#
-# data_path = r'.\DATA'
-#
-# test_data = mnist.MNIST(
-#     data_path, train=False, transform=data_tf, download=False)
-#
-# test_loader = data.DataLoader(test_data, batch_size=1000, shuffle=True)
 from utils_func import glob_extensions, cv_imread
 '''
 猫狗分类

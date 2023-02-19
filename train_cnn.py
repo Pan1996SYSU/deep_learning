@@ -9,28 +9,12 @@ import torch
 from torch.autograd import Variable
 
 # from CNN import CNNNet
-# data_tf = torchvision.transforms.Compose(
-#     [
-#         torchvision.transforms.ToTensor(),
-#         torchvision.transforms.Normalize([0.5], [0.5])
-#     ])
-#
-# data_path = r'.\DATA'
-#
-# train_data = mnist.MNIST(
-#     data_path, train=True, transform=data_tf, download=False)
-# test_data = mnist.MNIST(
-#     data_path, train=False, transform=data_tf, download=False)
-#
-# train_loader = data.DataLoader(train_data, batch_size=300, shuffle=True)
-# test_loader = data.DataLoader(test_data, batch_size=100, shuffle=True)
 from utils_func import glob_extensions, cv_imread
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # model = CNNNet()
 model = torch.load(r'.\pth\CNN_11.pth')
 model.cuda(0)
-# model = torch.load(r'.\pth\4.pth')
 
 loss_func = torch.nn.CrossEntropyLoss()
 opt = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -82,10 +66,11 @@ for epoch in range(4):
         batch_y = Variable(b_y)
         out = model(batch_x)
         loss = loss_func(out, batch_y)
-        # 清空上一步残余更新参数值
+        # 梯度清零
         opt.zero_grad()
+        # 反向传播
         loss.backward()
-        # 将参数更新值施加到net的parameters上
+        # 根据梯度更新网络参数
         opt.step()
         if i % 500 == 0:
             loss_count.append(loss)
