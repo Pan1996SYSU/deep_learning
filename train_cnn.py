@@ -27,7 +27,7 @@ from utils_func import glob_extensions, cv_imread
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # model = CNNNet()
-model = torch.load(r'.\pth\CNN_4.pth')
+model = torch.load(r'.\pth\CNN_11.pth')
 model.cuda(0)
 # model = torch.load(r'.\pth\4.pth')
 
@@ -42,7 +42,7 @@ random.shuffle(train_path_list)
 num = len(train_path_list)
 
 loss_count = []
-for epoch in range(12):
+for epoch in range(4):
     for i, img_path in enumerate(train_path_list):
         if i % 1000 == 0:
             print(f'epoch:{epoch}, {round((i / num) * 100, 2)}%')
