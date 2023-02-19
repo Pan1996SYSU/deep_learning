@@ -5,13 +5,9 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torchvision
 from torch.autograd import Variable
-from torch.utils import data
-from torchvision.datasets import mnist
 
-from CNN import CNNNet
-
+# from CNN import CNNNet
 # data_tf = torchvision.transforms.Compose(
 #     [
 #         torchvision.transforms.ToTensor(),
@@ -28,25 +24,28 @@ from CNN import CNNNet
 # train_loader = data.DataLoader(train_data, batch_size=300, shuffle=True)
 # test_loader = data.DataLoader(test_data, batch_size=100, shuffle=True)
 from utils_func import glob_extensions, cv_imread
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = CNNNet()
+# model = CNNNet()
+model = torch.load(r'.\pth\CNN_4.pth')
 model.cuda(0)
 # model = torch.load(r'.\pth\4.pth')
 
 loss_func = torch.nn.CrossEntropyLoss()
 opt = torch.optim.Adam(model.parameters(), lr=0.001)
 train_loader = []
-test_loader = []
+
 train_path = r".\DATA\cat-dog-all-data\test-dataset\train"
-test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
 train_path_list = glob_extensions(train_path)
-test_path_list = glob_extensions(test_path)
 random.shuffle(train_path_list)
-random.shuffle(test_path_list)
+
+num = len(train_path_list)
 
 loss_count = []
-for epoch in range(5):
+for epoch in range(12):
     for i, img_path in enumerate(train_path_list):
+        if i % 1000 == 0:
+            print(f'epoch:{epoch}, {round((i / num) * 100, 2)}%')
         if i % 50 != 0:
             continue
         else:
@@ -67,7 +66,8 @@ for epoch in range(5):
                 img = cv_imread(train_path_list[i + j])
                 img = cv2.resize(img, (401, 401))
                 img = np.transpose(img, (2, 0, 1))
-                img = torch.unsqueeze(torch.as_tensor(img, device=device), dim=0)
+                img = torch.unsqueeze(
+                    torch.as_tensor(img, device=device), dim=0)
                 img = img.to(torch.float32)
                 if Path(train_path_list[i + j]).parent.name == 'cat':
                     y = torch.tensor([1, 0])
@@ -90,7 +90,7 @@ for epoch in range(5):
             loss_count.append(loss)
     torch.save(model, rf'.\pth\CNN_{epoch}.pth')
 plt.figure('PyTorch_CNN_Loss')
-loss = [l.detach().numpy() for l in loss_count]
+loss = [l.cpu().detach().numpy() for l in loss_count]
 plt.plot(loss, label='Loss')
 plt.legend()
 plt.show()

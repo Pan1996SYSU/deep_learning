@@ -1,31 +1,72 @@
+import random
+from pathlib import Path
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
-import torchvision
 from torch.autograd import Variable
-from torch.utils import data
-from torchvision.datasets import mnist
 
-data_tf = torchvision.transforms.Compose(
-    [
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize([0.5], [0.5])
-    ])
+# data_tf = torchvision.transforms.Compose(
+#     [
+#         torchvision.transforms.ToTensor(),
+#         torchvision.transforms.Normalize([0.5], [0.5])
+#     ])
+#
+# data_path = r'.\DATA'
+#
+# test_data = mnist.MNIST(
+#     data_path, train=False, transform=data_tf, download=False)
+#
+# test_loader = data.DataLoader(test_data, batch_size=1000, shuffle=True)
+from utils_func import glob_extensions, cv_imread
 
-data_path = r'.\DATA'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-test_data = mnist.MNIST(
-    data_path, train=False, transform=data_tf, download=False)
-
-test_loader = data.DataLoader(test_data, batch_size=1000, shuffle=True)
-
-model = torch.load(r'.\pth\4.pth')
+model = torch.load(r'.\pth\CNN_12.pth')
 accuracy_sum = []
 
-for i, (test_x, test_y) in enumerate(test_loader):
-    test_x = Variable(test_x.cuda[0])
-    test_y = Variable(test_y.cuda[0])
+test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
+test_path_list = glob_extensions(test_path)
+random.shuffle(test_path_list)
+
+for i, img_path in enumerate(test_path_list):
+    if i % 50 != 0:
+        continue
+    else:
+        img = cv_imread(img_path)
+        img = cv2.resize(img, (401, 401))
+        img = np.transpose(img, (2, 0, 1))
+        img = torch.unsqueeze(torch.as_tensor(img, device=device), dim=0)
+        img = img.to(torch.float32)
+        batch_img = img
+        if Path(img_path).parent.name == 'cat':
+            y = torch.tensor([1, 0], device=device)
+        else:
+            y = torch.tensor([0, 1], device=device)
+        y = torch.unsqueeze(torch.as_tensor(y), dim=0)
+        y = y.to(torch.float32)
+        b_y = y
+        for j in range(1, 50):
+            img = cv_imread(test_path_list[i + j])
+            img = cv2.resize(img, (401, 401))
+            img = np.transpose(img, (2, 0, 1))
+            img = torch.unsqueeze(torch.as_tensor(img, device=device), dim=0)
+            img = img.to(torch.float32)
+            if Path(test_path_list[i + j]).parent.name == 'cat':
+                y = torch.tensor([1, 0])
+            else:
+                y = torch.tensor([0, 1])
+            y = torch.unsqueeze(torch.as_tensor(y, device=device), dim=0)
+            y = y.to(torch.float32)
+            batch_img = torch.cat((batch_img, img))
+            b_y = torch.cat((b_y, y))
+    test_x = Variable(batch_img)
+    test_y = Variable(b_y)
     out = model(test_x)
-    accuracy = torch.max(out, 1)[1].numpy() == test_y.numpy()
+    accuracy = torch.max(out.cpu(),
+                         1)[1].numpy() == torch.max(test_y.cpu(),
+                                                    1)[1].numpy()
     accuracy_sum.append(accuracy.mean())
     print(f'Iteration: {i}\nAccuracy: {round(accuracy.mean() * 100, 2)}%')
     print(f'-------------------------')
