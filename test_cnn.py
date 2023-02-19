@@ -20,7 +20,14 @@ from torch.autograd import Variable
 #
 # test_loader = data.DataLoader(test_data, batch_size=1000, shuffle=True)
 from utils_func import glob_extensions, cv_imread
-
+'''
+猫狗分类
+训练集：22500张
+测试集：2500张
+50张/批
+训练20代
+准确率：83.52%
+'''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = torch.load(r'.\pth\CNN_11.pth')
