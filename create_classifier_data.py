@@ -34,9 +34,9 @@ def parse_annotation_jpeg(annotation_path, jpeg_path, gs):
     """
     img = cv2.imread(jpeg_path)
 
-    selective_search.config(gs, img, strategy='q')
+    selective_search.config_get_img_method(gs, img, strategy='q')
     # 计算候选建议
-    rects = selective_search.get_rects(gs)
+    rects = selective_search.get_rect(gs)
     # 获取标注边界框
     bndboxs = parse_xml(annotation_path)
 
@@ -67,8 +67,8 @@ def parse_annotation_jpeg(annotation_path, jpeg_path, gs):
 
 
 if __name__ == '__main__':
-    car_root_dir = '../../data/voc_car/'
-    classifier_root_dir = '../../data/classifier_car/'
+    car_root_dir = './DATA/voc_car/'
+    classifier_root_dir = './DATA/voc_car/classifier_car/'
 
     gs = selective_search.get_selective_search()
     for name in ['train', 'val']:

@@ -1,9 +1,11 @@
+import csv
 import json
 import logging
 import math
 import os
 import shutil
 import traceback
+import xml.etree.ElementTree as ET
 from collections import Counter
 from glob import glob
 from pathlib import Path
@@ -16,13 +18,34 @@ from tqdm import tqdm
 
 extensions = {'.bmp', '.gif', '.jpeg', '.jpg', '.pbm', '.png', '.tif', '.tiff'}
 
+
 def parse_xml(path):
-    with open(path, 'r') as file:
-        print(123)
+    tree = ET.ElementTree(file=path)
+    root = tree.getroot()
+    ObjectSet = root.findall('object')
+    ObjBndBoxSet = {}
+    for Object in ObjectSet:
+        ObjName = Object.find('name').text
+        BndBox = Object.find('bndbox')
+        x1 = int(BndBox.find('xmin').text)
+        y1 = int(BndBox.find('ymin').text)
+        x2 = int(BndBox.find('xmax').text)
+        y2 = int(BndBox.find('ymax').text)
+        BndBoxLoc = [x1, y1, x2, y2]
+        if ObjName in ObjBndBoxSet:
+            ObjBndBoxSet[ObjName].append(BndBoxLoc)
+        else:
+            ObjBndBoxSet[ObjName] = [BndBoxLoc]
+    return ObjBndBoxSet
+
 
 def parse_car_csv(path):
-    with open(path, 'r') as file:
-        print(123)
+    csv_path = Path(path, 'car.csv')
+    with open(csv_path, 'r') as file:
+        lines = csv.reader(file)
+        name_list = [line[0] for line in lines]
+    return name_list
+
 
 def compute_ious(rects, bndboxs):
     print(123)
@@ -39,7 +62,7 @@ def get_circle(p1, p2, p3):
 
     cx = (bc * (p2[1] - p3[1]) - cd * (p1[1] - p2[1])) / det
     cy = ((p1[0] - p2[0]) * cd - (p2[0] - p3[0]) * bc) / det
-    radius = np.sqrt((cx - p1[0])**2 + (cy - p1[1])**2)
+    radius = np.sqrt((cx - p1[0]) ** 2 + (cy - p1[1]) ** 2)
     cx, cy, radius = cx, cy, radius
 
     return (cx, cy), radius
@@ -110,7 +133,7 @@ def shape_to_points(shape):
         orig_y2 = points[1][1]
 
         # Calculate radius of circle
-        radius = math.sqrt((orig_x2 - orig_x1)**2 + (orig_y2 - orig_y1)**2)
+        radius = math.sqrt((orig_x2 - orig_x1) ** 2 + (orig_y2 - orig_y1) ** 2)
 
         circle_polygon = []
 
@@ -389,7 +412,7 @@ def pixmap_to_ndarray(pixmap):
         size.width() * (image.depth() // 8) * size.height())
     ndarray = np.frombuffer(
         s, dtype=np.uint8).reshape(
-            (size.height(), size.width(), image.depth() // 8))
+        (size.height(), size.width(), image.depth() // 8))
     return ndarray
 
 
@@ -416,7 +439,7 @@ def crop_json(json_data, x, y, w, h):
 def crop_img(img, x, y, w, h):
     try:
         res_img = img[max(0, int(y)):min(int(y), h),
-                      max(0, int(x)):min(int(x), w)].copy()
+                  max(0, int(x)):min(int(x), w)].copy()
     except Exception as e:
         logging.error(e)
         logging.error(traceback.format_exc())
