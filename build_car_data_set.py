@@ -44,7 +44,6 @@ def sample_train_val(samples):
         length = len(dataset)
 
         random_samples = random.sample(range(length), int(length / 10))
-        # print(random_samples)
         new_dataset = dataset[random_samples]
         samples[name] = new_dataset
 
@@ -56,8 +55,10 @@ def save_car(car_samples, data_root_dir, data_annotation_dir, data_jpeg_dir):
     保存类别Car的样本图片和标注文件
     """
     for sample_name in car_samples:
-        src_annotation_path = os.path.join(voc_annotation_dir, sample_name + suffix_xml)
-        dst_annotation_path = os.path.join(data_annotation_dir, sample_name + suffix_xml)
+        src_annotation_path = os.path.join(
+            voc_annotation_dir, sample_name + suffix_xml)
+        dst_annotation_path = os.path.join(
+            data_annotation_dir, sample_name + suffix_xml)
         make_dirs(Path(dst_annotation_path).parent)
         shutil.copyfile(src_annotation_path, dst_annotation_path)
 
@@ -72,13 +73,15 @@ def save_car(car_samples, data_root_dir, data_annotation_dir, data_jpeg_dir):
 
 if __name__ == '__main__':
     # 构建训练集和测试集的文件stem的ndarray
-    samples = {'train': parse_train_val(car_train_path), 'val': parse_train_val(car_val_path)}
+    samples = {
+        'train': parse_train_val(car_train_path),
+        'val': parse_train_val(car_val_path)
+    }
 
     for name in ['train', 'val']:
         data_root_dir = os.path.join(car_root_dir, name)
         data_annotation_dir = os.path.join(data_root_dir, 'Annotations')
         data_jpg_dir = os.path.join(data_root_dir, 'JPEGImages')
 
-        save_car(samples[name], data_root_dir, data_annotation_dir, data_jpg_dir)
-
-    print('done')
+        save_car(
+            samples[name], data_root_dir, data_annotation_dir, data_jpg_dir)
