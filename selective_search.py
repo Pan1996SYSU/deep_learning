@@ -9,7 +9,7 @@ def get_selective_search():
     return ss
 
 
-def config(ss, image, strategy='q'):
+def config_get_img_method(ss, image, strategy='q'):
     ss.setBaseImage(image)
     if strategy == 's':
         ss.switchToSingleStrategy()
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     """
     gs = get_selective_search()
     img = cv_imread(r"D:\桌面\sth\hdasdjasjdasldjkal.jpg")
-    config(gs, img, strategy='f')
+    config_get_img_method(gs, img, strategy='f')
     star = time.time()
     rect = get_rect(gs)
     print(time.time() - star)
