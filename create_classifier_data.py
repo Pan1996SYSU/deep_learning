@@ -40,16 +40,18 @@ def parse_annotation_jpeg(annotation_path, jpeg_path, gs):
     # 获取标注边界框
     bndboxs = parse_xml(annotation_path)
 
+    bbox_list = np.array(bndboxs['car'])
+
     # 标注框大小
     maximum_bndbox_size = 0
-    for bndbox in bndboxs:
+    for bndbox in bbox_list:
         xmin, ymin, xmax, ymax = bndbox
         bndbox_size = (ymax - ymin) * (xmax - xmin)
         if bndbox_size > maximum_bndbox_size:
             maximum_bndbox_size = bndbox_size
 
     # 获取候选建议和标注边界框的IoU
-    iou_list = compute_ious(rects, bndboxs)
+    iou_list = compute_ious(rects, bbox_list)
 
     negative_list = list()
     for i in range(len(iou_list)):
@@ -63,7 +65,7 @@ def parse_annotation_jpeg(annotation_path, jpeg_path, gs):
         else:
             pass
 
-    return bndboxs, negative_list
+    return bbox_list, negative_list
 
 
 if __name__ == '__main__':
@@ -104,6 +106,9 @@ if __name__ == '__main__':
             dst_annotation_positive_path = os.path.join(dst_annotation_dir, sample_name + '_1' + '.csv')
             dst_annotation_negative_path = os.path.join(dst_annotation_dir, sample_name + '_0' + '.csv')
             dst_jpeg_path = os.path.join(dst_jpeg_dir, sample_name + '.jpg')
+            make_dirs(Path(dst_annotation_positive_path).parent)
+            make_dirs(Path(dst_annotation_negative_path).parent)
+            make_dirs(Path(dst_jpeg_path).parent)
             # 保存图片
             shutil.copyfile(src_jpeg_path, dst_jpeg_path)
             # 保存正负样本标注
