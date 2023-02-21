@@ -8,8 +8,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
 import torchvision.transforms as transforms
-from custom_batch_sampler import CustomBatchSampler
-from custom_finetune_dataset import CustomFinetuneDataset
+from utils.custom_batch_sampler import CustomBatchSampler
+from utils.custom_finetune_dataset import CustomFinetuneDataset
 from torch.utils.data import DataLoader
 
 
