@@ -16,6 +16,17 @@ from tqdm import tqdm
 
 extensions = {'.bmp', '.gif', '.jpeg', '.jpg', '.pbm', '.png', '.tif', '.tiff'}
 
+def parse_xml(path):
+    with open(path, 'r') as file:
+        print(123)
+
+def parse_car_csv(path):
+    with open(path, 'r') as file:
+        print(123)
+
+def compute_ious(rects, bndboxs):
+    print(123)
+
 
 def get_circle(p1, p2, p3):
     temp = p2[0] * p2[0] + p2[1] * p2[1]
