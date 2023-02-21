@@ -5,18 +5,18 @@ from pathlib import Path
 
 import numpy as np
 
-from utils_func import make_dirs
+from utils.utils_func import make_dirs
 
 suffix_xml = '.xml'
 suffix_jpg = '.jpg'
 
-car_train_path = './DATA/VOCdevkit/VOC2007/ImageSets/Main/car_train.txt'
-car_val_path = './DATA/VOCdevkit/VOC2007/ImageSets/Main/car_val.txt'
+car_train_path = '../DATA/VOCdevkit/VOC2007/ImageSets/Main/car_train.txt'
+car_val_path = '../DATA/VOCdevkit/VOC2007/ImageSets/Main/car_val.txt'
 
-voc_annotation_dir = './DATA/VOCdevkit/VOC2007/Annotations/'
-voc_jpg_dir = './DATA/VOCdevkit/VOC2007/JPEGImages'
+voc_annotation_dir = '../DATA/VOCdevkit/VOC2007/Annotations/'
+voc_jpg_dir = '../DATA/VOCdevkit/VOC2007/JPEGImages'
 
-car_root_dir = './DATA/voc_car/'
+car_root_dir = '../DATA/voc_car/'
 
 
 def parse_train_val(data_path):

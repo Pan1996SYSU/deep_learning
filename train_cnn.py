@@ -9,7 +9,7 @@ import torch
 from torch.autograd import Variable
 
 # from CNN import CNNNet
-from utils_func import glob_extensions, cv_imread
+from utils.utils_func import glob_extensions, cv_imread
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # model = CNNNet()

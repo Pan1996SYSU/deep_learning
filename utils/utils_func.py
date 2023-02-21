@@ -19,6 +19,27 @@ from tqdm import tqdm
 extensions = {'.bmp', '.gif', '.jpeg', '.jpg', '.pbm', '.png', '.tif', '.tiff'}
 
 
+def get_all_img_size(path):
+    path_list = glob_extensions(path)
+    max_h = 0
+    max_w = 0
+    min_h = 9999
+    min_w = 9999
+    for path in path_list:
+        img = cv_imread(path)
+        h, w = img.shape[:2]
+        if h > max_h:
+            max_h = h
+        if w > max_w:
+            max_w = w
+        if h < min_h:
+            min_h = h
+        if w < min_w:
+            min_w = w
+    print(f'max_h:{max_h}, min_h:{min_h}')
+    print(f'max_w:{max_w}, min_w:{min_w}')
+
+
 def parse_xml(path):
     tree = ET.ElementTree(file=path)
     root = tree.getroot()
@@ -66,7 +87,8 @@ def iou(pred_box, target_box):
     intersection = np.maximum(0.0, xB - xA) * np.maximum(0.0, yB - yA)
     # 计算两个边界框面积
     boxAArea = (pred_box[2] - pred_box[0]) * (pred_box[3] - pred_box[1])
-    boxBArea = (target_box[:, 2] - target_box[:, 0]) * (target_box[:, 3] - target_box[:, 1])
+    boxBArea = (target_box[:, 2] -
+                target_box[:, 0]) * (target_box[:, 3] - target_box[:, 1])
     scores = intersection / (boxAArea + boxBArea - intersection)
     return scores
 
@@ -90,7 +112,7 @@ def get_circle(p1, p2, p3):
 
     cx = (bc * (p2[1] - p3[1]) - cd * (p1[1] - p2[1])) / det
     cy = ((p1[0] - p2[0]) * cd - (p2[0] - p3[0]) * bc) / det
-    radius = np.sqrt((cx - p1[0]) ** 2 + (cy - p1[1]) ** 2)
+    radius = np.sqrt((cx - p1[0])**2 + (cy - p1[1])**2)
     cx, cy, radius = cx, cy, radius
 
     return (cx, cy), radius
@@ -161,7 +183,7 @@ def shape_to_points(shape):
         orig_y2 = points[1][1]
 
         # Calculate radius of circle
-        radius = math.sqrt((orig_x2 - orig_x1) ** 2 + (orig_y2 - orig_y1) ** 2)
+        radius = math.sqrt((orig_x2 - orig_x1)**2 + (orig_y2 - orig_y1)**2)
 
         circle_polygon = []
 
@@ -440,7 +462,7 @@ def pixmap_to_ndarray(pixmap):
         size.width() * (image.depth() // 8) * size.height())
     ndarray = np.frombuffer(
         s, dtype=np.uint8).reshape(
-        (size.height(), size.width(), image.depth() // 8))
+            (size.height(), size.width(), image.depth() // 8))
     return ndarray
 
 
@@ -467,7 +489,7 @@ def crop_json(json_data, x, y, w, h):
 def crop_img(img, x, y, w, h):
     try:
         res_img = img[max(0, int(y)):min(int(y), h),
-                  max(0, int(x)):min(int(x), w)].copy()
+                      max(0, int(x)):min(int(x), w)].copy()
     except Exception as e:
         logging.error(e)
         logging.error(traceback.format_exc())

@@ -7,7 +7,6 @@
 @description: 创建分类器数据集
 """
 
-import random
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +14,7 @@ import shutil
 import time
 import cv2
 import os
-import selective_search
+from utils import selective_search
 
 # train
 # positive num: 625
@@ -23,7 +22,7 @@ import selective_search
 # val
 # positive num: 625
 # negative num: 321474
-from utils_func import make_dirs, parse_xml, parse_car_csv, compute_ious
+from utils.utils_func import make_dirs, parse_xml, parse_car_csv, compute_ious
 
 
 def parse_annotation_jpeg(annotation_path, jpeg_path, gs):
@@ -69,8 +68,8 @@ def parse_annotation_jpeg(annotation_path, jpeg_path, gs):
 
 
 if __name__ == '__main__':
-    car_root_dir = './DATA/voc_car/'
-    classifier_root_dir = './DATA/voc_car/classifier_car/'
+    car_root_dir = '../DATA/voc_car/'
+    classifier_root_dir = '../DATA/voc_car/classifier_car/'
 
     gs = selective_search.get_selective_search()
     for name in ['train', 'val']:

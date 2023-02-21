@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.autograd import Variable
-from utils_func import glob_extensions, cv_imread
+from utils.utils_func import glob_extensions, cv_imread
 '''
 猫狗分类
 训练集：22500张

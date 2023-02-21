@@ -1,7 +1,7 @@
 import time
 
 import cv2
-from utils_func import cv_imread
+from utils.utils_func import cv_imread
 
 
 def get_selective_search():
