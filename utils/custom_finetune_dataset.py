@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""
-@date: 2020/3/3 下午7:06
-@file: custom_finetune_dataset.py
-@author: zj
-@description: 自定义微调数据类
-"""
-
-import numpy  as np
+import numpy as np
 import os
 import cv2
 from PIL import Image
@@ -15,7 +6,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from utils_func import parse_car_csv
+from utils.utils_func import parse_car_csv
 
 
 class CustomFinetuneDataset(Dataset):
@@ -25,7 +16,6 @@ class CustomFinetuneDataset(Dataset):
 
         jpeg_images = [cv2.imread(os.path.join(root_dir, 'JPEGImages', sample_name + ".jpg"))
                        for sample_name in samples]
-
         positive_annotations = [os.path.join(root_dir, 'Annotations', sample_name + '_1.csv')
                                 for sample_name in samples]
         negative_annotations = [os.path.join(root_dir, 'Annotations', sample_name + '_0.csv')
