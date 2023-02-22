@@ -12,11 +12,17 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import torch
 import yaml
 from PIL import Image
 from tqdm import tqdm
 
 extensions = {'.bmp', '.gif', '.jpeg', '.jpg', '.pbm', '.png', '.tif', '.tiff'}
+
+
+def save_model(model, model_save_path):
+    make_dirs(Path(model_save_path).parent)
+    torch.save(model.state_dict(), model_save_path)
 
 
 def get_all_img_size(path):
