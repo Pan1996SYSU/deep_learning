@@ -1,27 +1,19 @@
-# -*- coding: utf-8 -*-
-
-"""
-@date: 2020/3/1 下午2:38
-@file: linear_svm.py
-@author: zj
-@description:
-"""
-
-import time
 import copy
 import os
 import random
-import numpy as np
+import time
+
+import psutil
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 from torchvision.models import alexnet
 
+from utils.custom_batch_sampler import CustomBatchSampler
 from utils.custom_classifier_dataset import CustomClassifierDataset
 from utils.custom_hard_negative_mining_dataset import CustomHardNegativeMiningDataset
-from utils.custom_batch_sampler import CustomBatchSampler
 from utils.utils_func import save_model
 
 batch_positive = 32
@@ -30,22 +22,22 @@ batch_total = 128
 
 
 def load_data(data_root_dir):
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize((227, 227)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.ToPILImage(),
+            transforms.Resize((227, 227)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
 
     data_loaders = {}
     data_sizes = {}
-    remain_negative_list = list()
     for name in ['train', 'val']:
         data_dir = os.path.join(data_root_dir, name)
 
         data_set = CustomClassifierDataset(data_dir, transform=transform)
-        if name is 'train':
+        if name == 'train':
             """
             使用hard negative mining方式
             初始正负样本比例为1:1。由于正样本数远小于负样本，所以以正样本数为基准，在负样本集中随机提取同样数目负样本作为初始负样本集
@@ -53,18 +45,30 @@ def load_data(data_root_dir):
             positive_list = data_set.get_positives()
             negative_list = data_set.get_negatives()
 
-            init_negative_idxs = random.sample(range(len(negative_list)), len(positive_list))
-            init_negative_list = [negative_list[idx] for idx in range(len(negative_list)) if idx in init_negative_idxs]
-            remain_negative_list = [negative_list[idx] for idx in range(len(negative_list))
-                                    if idx not in init_negative_idxs]
+            init_negative_idxs = random.sample(
+                range(len(negative_list)), len(positive_list))
+            init_negative_list = [
+                negative_list[idx] for idx in range(len(negative_list))
+                if idx in init_negative_idxs
+            ]
+            remain_negative_list = [
+                negative_list[idx] for idx in range(len(negative_list))
+                if idx not in init_negative_idxs
+            ]
 
             data_set.set_negative_list(init_negative_list)
             data_loaders['remain'] = remain_negative_list
 
-        sampler = CustomBatchSampler(data_set.get_positive_num(), data_set.get_negative_num(),
-                                     batch_positive, batch_negative)
+        sampler = CustomBatchSampler(
+            data_set.get_positive_num(), data_set.get_negative_num(),
+            batch_positive, batch_negative)
 
-        data_loader = DataLoader(data_set, batch_size=batch_total, sampler=sampler, num_workers=8, drop_last=True)
+        data_loader = DataLoader(
+            data_set,
+            batch_size=batch_total,
+            sampler=sampler,
+            num_workers=psutil.cpu_count(),
+            drop_last=True)
         data_loaders[name] = data_loader
         data_sizes[name] = len(sampler)
     return data_loaders, data_sizes
@@ -113,13 +117,30 @@ def get_hard_negatives(preds, cache_dicts):
     tn_rects = cache_dicts['rect'][tn_mask].numpy()
     tn_image_ids = cache_dicts['image_id'][tn_mask].numpy()
 
-    hard_negative_list = [{'rect': fp_rects[idx], 'image_id': fp_image_ids[idx]} for idx in range(len(fp_rects))]
-    easy_negatie_list = [{'rect': tn_rects[idx], 'image_id': tn_image_ids[idx]} for idx in range(len(tn_rects))]
+    hard_negative_list = [
+        {
+            'rect': fp_rects[idx],
+            'image_id': fp_image_ids[idx]
+        } for idx in range(len(fp_rects))
+    ]
+    easy_negatie_list = [
+        {
+            'rect': tn_rects[idx],
+            'image_id': tn_image_ids[idx]
+        } for idx in range(len(tn_rects))
+    ]
 
     return hard_negative_list, easy_negatie_list
 
 
-def train_model(data_loaders, model, criterion, optimizer, lr_scheduler, num_epochs=25, device=None):
+def train_model(
+        data_loaders,
+        model,
+        criterion,
+        optimizer,
+        lr_scheduler,
+        num_epochs=25,
+        device=None):
     since = time.time()
 
     best_model_weights = copy.deepcopy(model.state_dict())
@@ -142,8 +163,11 @@ def train_model(data_loaders, model, criterion, optimizer, lr_scheduler, num_epo
 
             # 输出正负样本数
             data_set = data_loaders[phase].dataset
-            print('{} - positive_num: {} - negative_num: {} - data size: {}'.format(
-                phase, data_set.get_positive_num(), data_set.get_negative_num(), data_sizes[phase]))
+            print(
+                '{} - positive_num: {} - negative_num: {} - data size: {}'.
+                format(
+                    phase, data_set.get_positive_num(),
+                    data_set.get_negative_num(), data_sizes[phase]))
 
             # Iterate over data.
             for inputs, labels, cache_dicts in data_loaders[phase]:
@@ -175,8 +199,9 @@ def train_model(data_loaders, model, criterion, optimizer, lr_scheduler, num_epo
             epoch_loss = running_loss / data_sizes[phase]
             epoch_acc = running_corrects.double() / data_sizes[phase]
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(
-                phase, epoch_loss, epoch_acc))
+            print(
+                '{} Loss: {:.4f} Acc: {:.4f}'.format(
+                    phase, epoch_loss, epoch_acc))
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
@@ -190,8 +215,13 @@ def train_model(data_loaders, model, criterion, optimizer, lr_scheduler, num_epo
         transform = train_dataset.get_transform()
 
         with torch.set_grad_enabled(False):
-            remain_dataset = CustomHardNegativeMiningDataset(remain_negative_list, jpeg_images, transform=transform)
-            remain_data_loader = DataLoader(remain_dataset, batch_size=batch_total, num_workers=8, drop_last=True)
+            remain_dataset = CustomHardNegativeMiningDataset(
+                remain_negative_list, jpeg_images, transform=transform)
+            remain_data_loader = DataLoader(
+                remain_dataset,
+                batch_size=batch_total,
+                num_workers=psutil.cpu_count(),
+                drop_last=True)
 
             # 获取训练数据集的负样本集
             negative_list = train_dataset.get_negatives()
@@ -213,28 +243,39 @@ def train_model(data_loaders, model, criterion, optimizer, lr_scheduler, num_epo
 
                 running_corrects += torch.sum(preds == labels.data)
 
-                hard_negative_list, easy_neagtive_list = get_hard_negatives(preds.cpu().numpy(), cache_dicts)
-                add_hard_negatives(hard_negative_list, negative_list, add_negative_list)
+                hard_negative_list, easy_neagtive_list = get_hard_negatives(
+                    preds.cpu().numpy(), cache_dicts)
+                add_hard_negatives(
+                    hard_negative_list, negative_list, add_negative_list)
 
             remain_acc = running_corrects.double() / len(remain_negative_list)
-            print('remiam negative size: {}, acc: {:.4f}'.format(len(remain_negative_list), remain_acc))
+            print(
+                'remiam negative size: {}, acc: {:.4f}'.format(
+                    len(remain_negative_list), remain_acc))
 
             # 训练完成后，重置负样本，进行hard negatives mining
             train_dataset.set_negative_list(negative_list)
-            tmp_sampler = CustomBatchSampler(train_dataset.get_positive_num(), train_dataset.get_negative_num(),
-                                             batch_positive, batch_negative)
-            data_loaders['train'] = DataLoader(train_dataset, batch_size=batch_total, sampler=tmp_sampler,
-                                               num_workers=8, drop_last=True)
+            tmp_sampler = CustomBatchSampler(
+                train_dataset.get_positive_num(),
+                train_dataset.get_negative_num(), batch_positive,
+                batch_negative)
+            data_loaders['train'] = DataLoader(
+                train_dataset,
+                batch_size=batch_total,
+                sampler=tmp_sampler,
+                num_workers=psutil.cpu_count(),
+                drop_last=True)
             data_loaders['add_negative'] = add_negative_list
             # 重置数据集大小
             data_sizes['train'] = len(tmp_sampler)
 
         # 每训练一轮就保存
-        save_model(model, 'models/linear_svm_alexnet_car_%d.pth' % epoch)
+        save_model(model, 'pth/linear_svm_AlexNet_car_%d.pth' % epoch)
 
     time_elapsed = time.time() - since
-    print('Training complete in {:.0f}m {:.0f}s'.format(
-        time_elapsed // 60, time_elapsed % 60))
+    print(
+        'Training complete in {:.0f}m {:.0f}s'.format(
+            time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc))
 
     # load best model weights
@@ -246,7 +287,7 @@ if __name__ == '__main__':
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     # device = 'cpu'
 
-    data_loaders, data_sizes = load_data('./data/classifier_car')
+    data_loaders, data_sizes = load_data('./DATA/voc_car/classifier_car')
 
     # 加载CNN模型
     model_path = './pth/alex_net_car.pth'
@@ -270,6 +311,13 @@ if __name__ == '__main__':
     # 共训练10轮，每隔4论减少一次学习率
     lr_schduler = optim.lr_scheduler.StepLR(optimizer, step_size=4, gamma=0.1)
 
-    best_model = train_model(data_loaders, model, criterion, optimizer, lr_schduler, num_epochs=10, device=device)
+    best_model = train_model(
+        data_loaders,
+        model,
+        criterion,
+        optimizer,
+        lr_schduler,
+        num_epochs=10,
+        device=device)
     # 保存最好的模型参数
-    save_model(best_model, 'models/best_linear_svm_alexnet_car.pth')
+    save_model(best_model, 'pth/best_linear_svm_AlexNet_car.pth')
