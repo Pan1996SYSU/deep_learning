@@ -136,7 +136,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-
+    # 根据ss算法得出的候选框，根据IoU生成若干正负样本，把AlexNet输出层修改为2，放进AlexNet训练，即可得到能分出car的AlexNet
     best_model = train_model(
         data_loaders,
         model,
