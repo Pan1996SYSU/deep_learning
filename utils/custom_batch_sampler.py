@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-
-"""
-@date: 2020/3/3 下午7:38
-@file: custom_batch_sampler.py
-@author: zj
-@description: 自定义采样器
-"""
-
 import numpy as np
 import random
 from torch.utils.data import Sampler

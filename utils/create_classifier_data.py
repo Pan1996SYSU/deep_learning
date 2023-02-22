@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-
-"""
-@date: 2020/3/1 下午7:17
-@file: create_classifier_data.py
-@author: zj
-@description: 创建分类器数据集
-"""
-
 from pathlib import Path
 
 import numpy as np
