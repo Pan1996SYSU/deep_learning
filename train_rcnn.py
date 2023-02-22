@@ -124,13 +124,11 @@ def train_model(
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    data_loaders, data_sizes = load_data('./data/finetune_car')
+    data_loaders, data_sizes = load_data('./DATA/voc_car/classifier_car')
 
     model = models.alexnet(pretrained=True)
-    # print(model)
     num_features = model.classifier[6].in_features
     model.classifier[6] = nn.Linear(num_features, 2)
-    # print(model)
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()

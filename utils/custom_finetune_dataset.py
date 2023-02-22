@@ -29,7 +29,7 @@ class CustomFinetuneDataset(Dataset):
         negative_rects = list()
 
         for annotation_path in positive_annotations:
-            rects = np.loadtxt(annotation_path, dtype=np.int, delimiter=' ')
+            rects = np.loadtxt(annotation_path, dtype=np.int_, delimiter=' ')
             # 存在文件为空或者文件中仅有单行数据
             if len(rects.shape) == 1:
                 # 是否为单行
@@ -42,7 +42,7 @@ class CustomFinetuneDataset(Dataset):
                 positive_rects.extend(rects)
                 positive_sizes.append(len(rects))
         for annotation_path in negative_annotations:
-            rects = np.loadtxt(annotation_path, dtype=np.int, delimiter=' ')
+            rects = np.loadtxt(annotation_path, dtype=np.int_, delimiter=' ')
             # 和正样本规则一样
             if len(rects.shape) == 1:
                 if rects.shape[0] == 4:
