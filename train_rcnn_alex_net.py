@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
 import torchvision.transforms as transforms
+from torchvision.models import AlexNet_Weights
+
 from utils.custom_batch_sampler import CustomBatchSampler
 from utils.custom_finetune_dataset import CustomFinetuneDataset
 from torch.utils.data import DataLoader
@@ -49,7 +51,7 @@ def train_model(
         criterion,
         optimizer,
         lr_scheduler,
-        num_epochs=25,
+        num_epochs=4,
         device=None):
     since = time.time()
 
@@ -126,7 +128,7 @@ if __name__ == '__main__':
 
     data_loaders, data_sizes = load_data('./DATA/voc_car/classifier_car')
 
-    model = models.alexnet(pretrained=True)
+    model = models.alexnet(weights=AlexNet_Weights.DEFAULT)
     num_features = model.classifier[6].in_features
     model.classifier[6] = nn.Linear(num_features, 2)
     model = model.to(device)
@@ -142,6 +144,6 @@ if __name__ == '__main__':
         optimizer,
         lr_scheduler,
         device=device,
-        num_epochs=25)
+        num_epochs=4)
     # 保存最好的模型参数
     torch.save(best_model.state_dict(), './pth/alex_net_car.pth')
