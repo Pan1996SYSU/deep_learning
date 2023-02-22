@@ -51,7 +51,7 @@ def train_model(
         criterion,
         optimizer,
         lr_scheduler,
-        num_epochs=4,
+        num_epochs=12,
         device=None):
     since = time.time()
 
@@ -144,6 +144,6 @@ if __name__ == '__main__':
         optimizer,
         lr_scheduler,
         device=device,
-        num_epochs=4)
+        num_epochs=1)
     # 保存最好的模型参数
     torch.save(best_model.state_dict(), './pth/alex_net_car.pth')
