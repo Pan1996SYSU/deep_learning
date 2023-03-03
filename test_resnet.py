@@ -1,13 +1,10 @@
-import random
-from pathlib import Path
-import cv2
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+
 from my_dataset import CustomDataset
-from utils.utils_func import glob_extensions, cv_imread
 '''
 猫狗分类
 训练集：22500张
@@ -24,7 +21,6 @@ accuracy_sum = []
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
 dataset = CustomDataset(root_dir=test_path)
 dataloader = DataLoader(dataset, batch_size=20, shuffle=True)
-
 
 for i, (images, annotations) in enumerate(dataloader):
     images = images.permute(0, 3, 2, 1).to(torch.float32)
