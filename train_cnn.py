@@ -20,7 +20,7 @@ dataset = CustomDataset(root_dir=train_path)
 dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
 
 loss_count = []
-for epoch in range(4):
+for epoch in range(12):
     for images, annotations in dataloader:
         images = images.permute(0, 3, 2, 1).to(torch.float32)
         images = images.to(device)
@@ -35,6 +35,8 @@ for epoch in range(4):
         loss.backward()
         # 根据梯度更新网络参数
         opt.step()
+        if i % 500 == 0:
+            loss_count.append(loss)
     torch.save(model, rf'.\pth\CNN_{epoch}.pth')
 plt.figure('PyTorch_CNN_Loss')
 loss = [l.cpu().detach().numpy() for l in loss_count]
