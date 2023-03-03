@@ -17,7 +17,7 @@ train_loader = []
 
 train_path = r".\DATA\cat-dog-all-data\test-dataset\train"
 dataset = CustomDataset(root_dir=train_path)
-dataloader = DataLoader(dataset, batch_size=50, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
 
 loss_count = []
 for epoch in range(4):
