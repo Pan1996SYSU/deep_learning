@@ -14,7 +14,7 @@ from utils.utils_func import glob_extensions, cv_imread
 测试集：2500张
 40张/批
 训练12代
-准确率：92.84%
+准确率：92.92%
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -23,7 +23,7 @@ accuracy_sum = []
 
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
 dataset = CustomDataset(root_dir=test_path)
-dataloader = DataLoader(dataset, batch_size=30, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=20, shuffle=True)
 
 
 for i, (images, annotations) in enumerate(dataloader):
