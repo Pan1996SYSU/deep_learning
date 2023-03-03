@@ -1,13 +1,10 @@
-import random
-from pathlib import Path
-import cv2
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+
 from my_dataset import CustomDataset
-from utils.utils_func import glob_extensions, cv_imread
 '''
 猫狗分类
 训练集：22500张
