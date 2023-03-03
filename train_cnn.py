@@ -21,7 +21,7 @@ dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
 
 loss_count = []
 for epoch in range(12):
-    for images, annotations in dataloader:
+    for i, (images, annotations) in enumerate(dataloader):
         images = images.permute(0, 3, 2, 1).to(torch.float32)
         images = images.to(device)
         annotations = annotations.to(device)
