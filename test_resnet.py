@@ -17,7 +17,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = torch.load(r'.\pth\ResNet_11.pth')
 accuracy_sum = []
 
-test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
+test_path = r".\DATA\dogs-vs-cats\test\test"
 dataset = CatDogDataset(root_dir=test_path)
 dataloader = DataLoader(dataset, batch_size=20, shuffle=True)
 
