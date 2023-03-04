@@ -10,16 +10,16 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = models.resnet152()
 # num_features = model.fc.out_features
-model.fc = torch.nn.Linear(512, 2)
+model.fc = torch.nn.Linear(2048, 2)
 model.cuda(0)
 
 loss_func = torch.nn.CrossEntropyLoss()
 opt = torch.optim.Adam(model.parameters(), lr=0.001)
 train_loader = []
 
-train_path = r".\DATA\dogs-vs-cats\train\train"
+train_path = "./DATA/dogs-vs-cats/train/train"
 dataset = CatDogDataset(root_dir=train_path)
-dataloader = DataLoader(dataset, batch_size=50, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=30, shuffle=True)
 loss_count = []
 for epoch in range(12):
     for i, (images, annotations) in enumerate(dataloader):
@@ -38,7 +38,7 @@ for epoch in range(12):
         opt.step()
         if i % 500 == 0:
             loss_count.append(loss)
-    torch.save(model, rf'.\pth\ResNet_{epoch}.pth')
+    torch.save(model, f'./pth/ResNet_{epoch}.pth')
 plt.figure('PyTorch_ResNet_Loss')
 loss = [l.cpu().detach().numpy() for l in loss_count]
 plt.plot(loss, label='Loss')

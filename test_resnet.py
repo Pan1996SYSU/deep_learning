@@ -8,18 +8,18 @@ from my_dataset import CatDogDataset
 猫狗分类
 训练集：22500张
 测试集：2500张
-40张/批
+30张/批
 训练12代
 准确率：92.92%
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = torch.load(r'.\pth\ResNet_11.pth')
+model = torch.load('./pth/ResNet_11.pth')
 accuracy_sum = []
 
-test_path = r".\DATA\dogs-vs-cats\test\test"
+test_path = "./DATA/dogs-vs-cats/test/test"
 dataset = CatDogDataset(root_dir=test_path)
-dataloader = DataLoader(dataset, batch_size=20, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
 for i, (images, annotations) in enumerate(dataloader):
     images = images.permute(0, 3, 2, 1).to(torch.float32)

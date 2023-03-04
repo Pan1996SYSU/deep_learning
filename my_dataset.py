@@ -17,15 +17,18 @@ class CatDogDataset(Dataset):
         return len(self.img_list)
 
     def __getitem__(self, idx):
-        img_path = Path(self.img_list[idx])
-        image = cv_imread(img_path)
-        image = cv2.resize(image, (401, 401))
-        if img_path.parent.name == 'cat':
-            annotation = np.array([1.0, 0.0])
-        else:
-            annotation = np.array([0.0, 1.0])
+        try:
+            img_path = Path(self.img_list[idx])
+            image = cv_imread(img_path)
+            image = cv2.resize(image, (401, 401))
+            if img_path.parent.name == 'cat':
+                annotation = np.array([1.0, 0.0])
+            else:
+                annotation = np.array([0.0, 1.0])
 
-        return image, annotation
+            return image, annotation
+        except:
+            print(img_path)
 
 
 if __name__ == "__main__":
