@@ -3,7 +3,7 @@ import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from my_dataset import CustomDataset
+from my_dataset import CatDogDataset
 '''
 猫狗分类
 训练集：22500张
@@ -18,7 +18,7 @@ model = torch.load(r'.\pth\ResNet_11.pth')
 accuracy_sum = []
 
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
-dataset = CustomDataset(root_dir=test_path)
+dataset = CatDogDataset(root_dir=test_path)
 dataloader = DataLoader(dataset, batch_size=20, shuffle=True)
 
 for i, (images, annotations) in enumerate(dataloader):

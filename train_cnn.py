@@ -3,7 +3,7 @@ import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from my_dataset import CustomDataset
+from my_dataset import CatDogDataset
 from utils.CNN import CNNNet
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -16,7 +16,7 @@ opt = torch.optim.Adam(model.parameters(), lr=0.001)
 train_loader = []
 
 train_path = r".\DATA\cat-dog-all-data\test-dataset\train"
-dataset = CustomDataset(root_dir=train_path)
+dataset = CatDogDataset(root_dir=train_path)
 dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
 
 loss_count = []

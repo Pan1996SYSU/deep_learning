@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from utils.utils_func import cv_imread, glob_extensions
 
 
-class CustomDataset(Dataset):
+class CatDogDataset(Dataset):
 
     def __init__(self, root_dir):
         self.root_dir = root_dir
@@ -29,7 +29,7 @@ class CustomDataset(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = CustomDataset(
+    dataset = CatDogDataset(
         root_dir=r'./DATA/cat-dog-all-data/test-dataset/train')
     dataloader = DataLoader(dataset, batch_size=50, shuffle=True)
     for images, annotations in dataloader:
