@@ -10,14 +10,15 @@ from my_dataset import CatDogDataset
 测试集：2500张
 30张/批
 训练12代
-准确率：92.92%
+准确率：93.96%
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = torch.load('./pth/ResNet_11.pth')
+model.cuda(0)
 accuracy_sum = []
 
-test_path = "./DATA/dogs-vs-cats/test/test"
+test_path = "./DATA/cat-dog-all-data/cat-dog-all-data/test-dataset/test"
 dataset = CatDogDataset(root_dir=test_path)
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
