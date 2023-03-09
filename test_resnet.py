@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-
+from torchvision import models, transforms
 from my_dataset import CatDogDataset
 '''
 猫狗分类
@@ -14,16 +14,22 @@ from my_dataset import CatDogDataset
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = torch.load('./pth/ResNet_11.pth')
+model = torch.load('./pth/ResNet_15.pth')
 model.cuda(0)
 accuracy_sum = []
-
+# normalize = transforms.Normalize(
+#     mean=[106.35824316, 116.09900846, 124.61032364], std=[57.35260147, 57.33807308, 58.44982434])
+transform = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        transforms.Resize((401, 401)),
+        # normalize,
+    ])
 test_path = "./DATA/cat-dog-all-data/cat-dog-all-data/test-dataset/test"
-dataset = CatDogDataset(root_dir=test_path)
+dataset = CatDogDataset(root_dir=test_path, transform=transform)
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
 for i, (images, annotations) in enumerate(dataloader):
-    images = images.permute(0, 3, 2, 1).to(torch.float32)
     images = images.to(device)
     annotations = annotations.to(device)
     test_x = Variable(images)
