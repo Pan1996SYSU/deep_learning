@@ -11,7 +11,6 @@ from my_dataset import CatDogDataset
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = models.resnet152(pretrained=True)
-# num_features = model.fc.out_features
 model.fc = torch.nn.Sequential(
                                 torch.nn.Linear(2048, 512, bias=True),
                                 torch.nn.Linear(512, 64, bias=True),
@@ -28,18 +27,19 @@ normalize = transforms.Normalize(
     mean=[118.7626, 118.40911, 118.247246], std=[38.309254, 38.237263, 38.392258])
 transform = transforms.Compose(
     [
-        transforms.Resize((401, 401)),
         transforms.ToTensor(),
+        transforms.Resize((401, 401)),
         normalize,
     ])
-
-val_path = "./DATA/cat-dog-all-data/test-dataset/test"
-val_dataset = CatDogDataset(root_dir=val_path)
-val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
 
 train_path = "./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
 dataloader = DataLoader(dataset, batch_size=5, shuffle=True)
+
+val_path = "./DATA/cat-dog-all-data/test-dataset/test"
+val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
+val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
+
 loss_count = []
 
 best_model_weights = copy.deepcopy(model.state_dict())
@@ -48,7 +48,6 @@ best_acc = 0.0
 for epoch in range(20):
     best_model_weights = copy.deepcopy(model.state_dict())
     for i, (images, annotations) in enumerate(dataloader):
-        images = images.permute(0, 3, 2, 1).to(torch.float32)
         images = images.to(device)
         annotations = annotations.to(device)
         batch_x = Variable(images)
@@ -73,7 +72,6 @@ for epoch in range(20):
     print('-----------------------')
     accuracy_sum = []
     for j, (val_images, val_annotations) in enumerate(val_dataloader):
-        val_images = val_images.permute(0, 3, 2, 1).to(torch.float32)
         val_images = val_images.to(device)
         val_annotations = val_annotations.to(device)
         val_test_x = Variable(val_images)
