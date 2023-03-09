@@ -26,6 +26,9 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomRotation((30, 210)),
         transforms.Resize((401, 401)),
         normalize,
     ])
