@@ -21,6 +21,15 @@ transform = transforms.Compose(
         transforms.ToTensor(),
         transforms.Resize((401, 401)),
     ])
+# normalize = transforms.Normalize(
+#     mean=[106.35824316, 116.09900846, 124.61032364],
+#     std=[57.35260147, 57.33807308, 58.44982434])
+# transform = transforms.Compose(
+#     [
+#         transforms.ToTensor(),
+#         transforms.Resize((401, 401)),
+#         normalize,
+#     ])
 
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
 dataset = CatDogDataset(root_dir=test_path, transform=transform)

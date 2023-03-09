@@ -61,7 +61,7 @@ for epoch in range(20):
             print(f'epoch: {epoch}')
             print(f'Iteration: {i}')
             print(f'loss: {loss}')
-            print('--------------')
+            print('-----------------------')
     print(f'正在保存CNNNet_{epoch}.pth...')
     torch.save(model, f'./pth/CNNNet_{epoch}.pth')
     print(f'CNNNet_{epoch}.pth保存成功')
