@@ -9,7 +9,8 @@ from utils.utils_func import cv_imread, glob_extensions
 
 class CatDogDataset(Dataset):
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, transform=None):
+        self.transform = transform
         self.root_dir = root_dir
         self.img_list = glob_extensions(self.root_dir)
 
@@ -20,7 +21,6 @@ class CatDogDataset(Dataset):
         try:
             img_path = Path(self.img_list[idx])
             image = cv_imread(img_path)
-            image = cv2.resize(image, (401, 401))
             if img_path.parent.name == 'cat':
                 annotation = np.array([1.0, 0.0])
             else:
