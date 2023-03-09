@@ -28,15 +28,17 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
         transforms.Resize((401, 401)),
         normalize,
     ])
 
-train_path = "./DATA/cat-dog-all-data/test-dataset/train"
+train_path = "./DATA/cat-dog-all-data/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
 dataloader = DataLoader(dataset, batch_size=15, shuffle=True)
 
-val_path = "./DATA/cat-dog-all-data/test-dataset/test"
+val_path = "./DATA/cat-dog-all-data/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
 val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=True)
 
@@ -65,7 +67,7 @@ for epoch in range(20):
             print(f'epoch: {epoch}')
             print(f'Iteration: {i}')
             print(f'loss: {loss}')
-            print('--------------')
+            print('-----------------------')
     print(f'正在保存ResNet_{epoch}.pth...')
     torch.save(model, f'./pth/ResNet_{epoch}.pth')
     print(f'ResNet_{epoch}.pth保存成功')
