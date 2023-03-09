@@ -34,11 +34,11 @@ transform = transforms.Compose(
 
 train_path = "./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=5, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=15, shuffle=True)
 
 val_path = "./DATA/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
-val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
+val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=True)
 
 loss_count = []
 
