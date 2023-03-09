@@ -24,7 +24,7 @@ optimizer = torch.optim.SGD(
 train_loader = []
 
 normalize = transforms.Normalize(
-    mean=[118.7626, 118.40911, 118.247246], std=[38.309254, 38.237263, 38.392258])
+    mean=[106.35824316, 116.09900846, 124.61032364], std=[57.35260147, 57.33807308, 58.44982434])
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
