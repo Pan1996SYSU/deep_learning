@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 from sonic.utils_func import cv2_read_img, glob_extensions
 
@@ -8,6 +9,7 @@ def getStat(train_path):
     std = [0, 0, 0]
     for img_path in img_path_list:
         img = cv2_read_img(img_path)
+        img = cv2.resize(img, (401, 401))
         for i in range(3):
             mean[i] += img[:, :, i].mean()
             std[i] += img[:, :, i].std()

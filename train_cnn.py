@@ -17,7 +17,7 @@ model.cuda(0)
 loss_func = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
 # optimizer = torch.optim.SGD(
-#     model.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
+#     model.parameters(), lr=0.001, momentum=0.99, weight_decay=5e-4)
 train_loader = []
 
 normalize = transforms.Normalize(
@@ -26,13 +26,13 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
-        transforms.Resize((401, 401)),
-        normalize,
+        transforms.Resize((601, 601)),
+        # normalize,
     ])
 
 train_path = r"./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
 
 val_path = "./DATA/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)

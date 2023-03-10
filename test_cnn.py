@@ -27,7 +27,7 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
-        transforms.Resize((401, 401)),
+        transforms.Resize((601, 601)),
         normalize,
     ])
 
