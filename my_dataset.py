@@ -21,7 +21,7 @@ class CatDogDataset(Dataset):
             img_path = Path(self.img_list[idx])
             image = cv_imread(img_path)
             # image = cv2.resize(image, (401, 401))
-            if img_path.parent.name == 'cat':
+            if 'cat' in img_path.stem:
                 annotation = np.array([1.0, 0.0])
             else:
                 annotation = np.array([0.0, 1.0])

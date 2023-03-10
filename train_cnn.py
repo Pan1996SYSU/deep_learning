@@ -6,27 +6,27 @@ from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
+from torchvision.models import ResNet18_Weights
 
 from my_dataset import CatDogDataset
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # model = CNNNet()
-model = models.resnet18(pretrained=True)
+model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
 for param in model.parameters():
     param.requires_grad = False
 
 model.fc = torch.nn.Sequential(
-    torch.nn.Linear(512, 64),
-    torch.nn.Sigmoid(),
-    torch.nn.Linear(64, 8),
-    torch.nn.Sigmoid(),
-    torch.nn.Linear(8, 2),
+    torch.nn.Linear(512, 2),
+    torch.nn.Softmax(dim=1),
 )
+for p in model.fc.parameters():
+    p.requires_grad = True
 model.cuda(0)
 
 loss_func = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+# exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 train_loader = []
 
 normalize = transforms.Normalize(
@@ -51,7 +51,7 @@ loss_count = []
 best_model_weights = copy.deepcopy(model.state_dict())
 best_acc = 0.0
 for epoch in range(20):
-    best_model_weights = copy.deepcopy(model.state_dict())
+    # best_model_weights = copy.deepcopy(model.state_dict())
     for i, (images, annotations) in enumerate(dataloader):
         images = images.to(device)
         annotations = annotations.to(device)
@@ -59,11 +59,8 @@ for epoch in range(20):
         batch_y = Variable(annotations)
         out = model(batch_x)
         loss = loss_func(out, batch_y)
-        # 梯度清零
         optimizer.zero_grad()
-        # 反向传播
         loss.backward()
-        # 根据梯度更新网络参数
         optimizer.step()
         if i % 25 == 0:
             loss_count.append(loss)
@@ -89,10 +86,10 @@ for epoch in range(20):
     accuracy = round(sum(accuracy_sum) / len(accuracy_sum) * 100, 2)
     print(f'accuracy: {accuracy}%')
     print('-----------------------')
-    if accuracy > best_acc:
-        best_acc = accuracy
-        best_model_weights = copy.deepcopy(model.state_dict())
-    model.load_state_dict(best_model_weights)
+    # if accuracy > best_acc:
+    #     best_acc = accuracy
+    #     best_model_weights = copy.deepcopy(model.state_dict())
+    # model.load_state_dict(best_model_weights)
 
 plt.figure('PyTorch_CNNNet_Loss')
 loss = [l.cpu().detach().numpy() for l in loss_count]
