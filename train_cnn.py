@@ -3,21 +3,30 @@ import copy
 import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
+from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
-from torchvision import transforms
+from torchvision import transforms, models
 
 from my_dataset import CatDogDataset
-from utils.CNN import CNNNet
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = CNNNet()
-# model = torch.load(r'.\pth\CNN_11.pth')
+# model = CNNNet()
+model = models.resnet18(pretrained=True)
+for param in model.parameters():
+    param.requires_grad = False
+
+model.fc = torch.nn.Sequential(
+    torch.nn.Linear(512, 64),
+    torch.nn.Sigmoid(),
+    torch.nn.Linear(64, 8),
+    torch.nn.Sigmoid(),
+    torch.nn.Linear(8, 2),
+)
 model.cuda(0)
 
 loss_func = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
-# optimizer = torch.optim.SGD(
-#     model.parameters(), lr=0.001, momentum=0.99, weight_decay=5e-4)
+optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 train_loader = []
 
 normalize = transforms.Normalize(
@@ -26,17 +35,17 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
-        transforms.Resize((601, 601)),
+        transforms.Resize((224, 224)),
         # normalize,
     ])
 
 train_path = r"./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
 
 val_path = "./DATA/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
-val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=True)
+val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=False)
 
 loss_count = []
 best_model_weights = copy.deepcopy(model.state_dict())

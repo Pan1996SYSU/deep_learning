@@ -29,12 +29,12 @@ transform = transforms.Compose(
     [
         transforms.ToTensor(),
         transforms.Resize((601, 601)),
-        normalize,
+        # normalize,
     ])
 
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
 dataset = CatDogDataset(root_dir=test_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=50, shuffle=False)
 
 for i, (images, annotations) in enumerate(dataloader):
     images = images.to(device)
