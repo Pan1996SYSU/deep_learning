@@ -22,8 +22,8 @@ model.load_state_dict(pretrained_weight, strict=False)
 
 loss_func = torch.nn.CrossEntropyLoss()
 # optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.6)
 train_loader = []
 model.to(device)
 
