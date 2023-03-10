@@ -22,7 +22,7 @@ model.load_state_dict(pretrained_weight, strict=False)
 
 loss_func = torch.nn.CrossEntropyLoss()
 # optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 train_loader = []
 model.to(device)
@@ -40,7 +40,7 @@ transform = transforms.Compose(
 
 train_path = r"./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 val_path = "./DATA/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
@@ -61,7 +61,7 @@ for epoch in range(20):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if i % 25 == 0:
+        if i % 125 == 0:
             loss_count.append(loss)
             print(f'epoch: {epoch}')
             print(f'Iteration: {i}')
