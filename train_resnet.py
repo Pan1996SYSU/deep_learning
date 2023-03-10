@@ -13,9 +13,13 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = models.resnet152(pretrained=True)
 model.fc = torch.nn.Sequential(
                                 torch.nn.Linear(2048, 512, bias=True),
+                                torch.nn.ReLU(),
                                 torch.nn.Linear(512, 64, bias=True),
+                                torch.nn.ReLU(),
                                 torch.nn.Linear(64, 8, bias=True),
-                                torch.nn.Linear(8, 2, bias=True))
+                                torch.nn.ReLU(),
+                                torch.nn.Linear(8, 2, bias=True),
+)
 model.cuda(0)
 
 loss_func = torch.nn.CrossEntropyLoss()
@@ -28,8 +32,6 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomVerticalFlip(p=0.5),
         transforms.Resize((401, 401)),
         normalize,
     ])

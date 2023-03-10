@@ -28,8 +28,8 @@ class CNNNet(torch.nn.Module):
             torch.nn.Conv2d(30, 30, 3, 2, 1), torch.nn.BatchNorm2d(30),
             torch.nn.ReLU())
         # in_features, out_features
-        self.mlp1 = torch.nn.Linear(1470, 500)
-        self.mlp2 = torch.nn.Linear(500, 50)
+        self.mlp1 = torch.nn.Linear(1470, 500, torch.nn.Sigmoid())
+        self.mlp2 = torch.nn.Linear(500, 50, torch.nn.Sigmoid())
         self.mlp3 = torch.nn.Linear(50, 2)
 
     def forward(self, x):

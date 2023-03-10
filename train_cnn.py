@@ -15,7 +15,7 @@ model = CNNNet()
 model.cuda(0)
 
 loss_func = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
 # optimizer = torch.optim.SGD(
 #     model.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
 train_loader = []
@@ -26,9 +26,6 @@ normalize = transforms.Normalize(
 transform = transforms.Compose(
     [
         transforms.ToTensor(),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomVerticalFlip(p=0.5),
-        transforms.RandomRotation((30, 210)),
         transforms.Resize((401, 401)),
         normalize,
     ])
