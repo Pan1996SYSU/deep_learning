@@ -12,30 +12,29 @@ from my_dataset import CatDogDataset
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # model = CNNNet()
-model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-for param in model.parameters():
-    param.requires_grad = False
-
-model.fc = torch.nn.Sequential(
-    torch.nn.Linear(512, 2),
-    torch.nn.Softmax(dim=1),
-)
-for p in model.fc.parameters():
-    p.requires_grad = True
-model.cuda(0)
+model = models.resnet18()
+fc_input_feature = model.fc.in_features
+model.fc = torch.nn.Linear(fc_input_feature, 2)
+pretrained_weight = torch.hub.load_state_dict_from_url(url='https://download.pytorch.org/models/resnet18-5c106cde.pth', progress=True)
+del pretrained_weight['fc.weight']
+del pretrained_weight['fc.bias']
+model.load_state_dict(pretrained_weight, strict=False)
 
 loss_func = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
+# optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 # exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 train_loader = []
+model.to(device)
 
 normalize = transforms.Normalize(
     mean=[106.35824316, 116.09900846, 124.61032364],
     std=[57.35260147, 57.33807308, 58.44982434])
 transform = transforms.Compose(
     [
-        transforms.ToTensor(),
+        transforms.ToPILImage(),
         transforms.Resize((224, 224)),
+        transforms.ToTensor(),
         # normalize,
     ])
 
