@@ -49,8 +49,8 @@ val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=False)
 loss_count = []
 best_model_weights = copy.deepcopy(model.state_dict())
 best_acc = 0.0
-for epoch in range(20):
-    # best_model_weights = copy.deepcopy(model.state_dict())
+for epoch in range(100):
+    best_model_weights = copy.deepcopy(model.state_dict())
     for i, (images, annotations) in enumerate(dataloader):
         images = images.to(device)
         annotations = annotations.to(device)
@@ -67,10 +67,6 @@ for epoch in range(20):
             print(f'Iteration: {i}')
             print(f'loss: {loss}')
             print('-----------------------')
-    print(f'正在保存CNNNet_{epoch}.pth...')
-    torch.save(model, f'./pth/CNNNet_{epoch}.pth')
-    print(f'CNNNet_{epoch}.pth保存成功')
-    print('-----------------------')
     accuracy_sum = []
     for j, (val_images, val_annotations) in enumerate(val_dataloader):
         val_images = val_images.to(device)
@@ -85,10 +81,15 @@ for epoch in range(20):
     accuracy = round(sum(accuracy_sum) / len(accuracy_sum) * 100, 2)
     print(f'accuracy: {accuracy}%')
     print('-----------------------')
-    # if accuracy > best_acc:
-    #     best_acc = accuracy
-    #     best_model_weights = copy.deepcopy(model.state_dict())
-    # model.load_state_dict(best_model_weights)
+    if accuracy > best_acc:
+        best_acc = accuracy
+        best_model_weights = copy.deepcopy(model.state_dict())
+    model.load_state_dict(best_model_weights)
+    if epoch % 10 == 0:
+        print(f'正在保存CNNNet_{epoch}.pth...')
+        torch.save(model, f'./pth/CNNNet_{epoch}.pth')
+        print(f'CNNNet_{epoch}.pth保存成功')
+        print('-----------------------')
 
 plt.figure('PyTorch_CNNNet_Loss')
 loss = [l.cpu().detach().numpy() for l in loss_count]
