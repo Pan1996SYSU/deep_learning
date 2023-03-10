@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from torchvision import models, transforms
+from torchvision import transforms
+
 from my_dataset import CatDogDataset
 '''
 猫狗分类
