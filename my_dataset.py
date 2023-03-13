@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import cv2
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
@@ -20,7 +20,7 @@ class CatDogDataset(Dataset):
         try:
             img_path = Path(self.img_list[idx])
             image = cv_imread(img_path)
-            # image = cv2.resize(image, (401, 401))
+            image = cv2.resize(image, (401, 401))
             if 'cat' in img_path.stem:
                 annotation = np.array([1.0, 0.0])
             else:

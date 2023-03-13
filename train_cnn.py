@@ -9,21 +9,22 @@ from torchvision import transforms, models
 from torchvision.models import ResNet18_Weights
 
 from my_dataset import CatDogDataset
+from utils.CNN import CNNNet
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# model = CNNNet()
-model = models.resnet18()
-fc_input_feature = model.fc.in_features
-model.fc = torch.nn.Linear(fc_input_feature, 2)
-pretrained_weight = torch.hub.load_state_dict_from_url(url='https://download.pytorch.org/models/resnet18-5c106cde.pth', progress=True)
-del pretrained_weight['fc.weight']
-del pretrained_weight['fc.bias']
-model.load_state_dict(pretrained_weight, strict=False)
+model = CNNNet()
+# model = models.resnet18()
+# fc_input_feature = model.fc.in_features
+# model.fc = torch.nn.Linear(fc_input_feature, 2)
+# pretrained_weight = torch.hub.load_state_dict_from_url(url='https://download.pytorch.org/models/resnet18-5c106cde.pth', progress=True)
+# del pretrained_weight['fc.weight']
+# del pretrained_weight['fc.bias']
+# model.load_state_dict(pretrained_weight, strict=False)
 
 loss_func = torch.nn.CrossEntropyLoss()
-# optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.6)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+# optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+# exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.6)
 train_loader = []
 model.to(device)
 
@@ -32,15 +33,13 @@ normalize = transforms.Normalize(
     std=[57.35260147, 57.33807308, 58.44982434])
 transform = transforms.Compose(
     [
-        transforms.ToPILImage(),
-        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         # normalize,
     ])
 
 train_path = r"./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
 
 val_path = "./DATA/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
@@ -49,7 +48,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=False)
 loss_count = []
 best_model_weights = copy.deepcopy(model.state_dict())
 best_acc = 0.0
-for epoch in range(100):
+for epoch in range(12):
     best_model_weights = copy.deepcopy(model.state_dict())
     for i, (images, annotations) in enumerate(dataloader):
         images = images.to(device)
@@ -61,7 +60,7 @@ for epoch in range(100):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if i % 125 == 0:
+        if i % 25 == 0:
             loss_count.append(loss)
             print(f'epoch: {epoch}')
             print(f'Iteration: {i}')
