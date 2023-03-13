@@ -3,43 +3,31 @@ import copy
 import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
-from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
-from torchvision import transforms, models
-from torchvision.models import ResNet18_Weights
+from torchvision import transforms
 
 from my_dataset import CatDogDataset
 from utils.CNN import CNNNet
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = CNNNet()
-# model = models.resnet18()
-# fc_input_feature = model.fc.in_features
-# model.fc = torch.nn.Linear(fc_input_feature, 2)
-# pretrained_weight = torch.hub.load_state_dict_from_url(url='https://download.pytorch.org/models/resnet18-5c106cde.pth', progress=True)
-# del pretrained_weight['fc.weight']
-# del pretrained_weight['fc.bias']
-# model.load_state_dict(pretrained_weight, strict=False)
 
 loss_func = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-# optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-# exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.6)
 train_loader = []
 model.to(device)
 
 normalize = transforms.Normalize(
     mean=[106.35824316, 116.09900846, 124.61032364],
     std=[57.35260147, 57.33807308, 58.44982434])
-transform = transforms.Compose(
-    [
-        transforms.ToTensor(),
-        # normalize,
-    ])
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    # normalize,
+])
 
 train_path = r"./DATA/cat-dog-all-data/test-dataset/train"
 dataset = CatDogDataset(root_dir=train_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
 
 val_path = "./DATA/cat-dog-all-data/test-dataset/test"
 val_dataset = CatDogDataset(root_dir=val_path, transform=transform)
@@ -84,10 +72,10 @@ for epoch in range(12):
         best_acc = accuracy
         best_model_weights = copy.deepcopy(model.state_dict())
     model.load_state_dict(best_model_weights)
-    if epoch % 10 == 0:
-        print(f'正在保存CNNNet_{epoch}.pth...')
-        torch.save(model, f'./pth/CNNNet_{epoch}.pth')
-        print(f'CNNNet_{epoch}.pth保存成功')
+    if (epoch + 1) % 4 == 0:
+        print(f'正在保存CNNNet_{epoch+1}.pth...')
+        torch.save(model, f'./pth/CNNNet_{epoch+1}.pth')
+        print(f'CNNNet_{epoch+1}.pth保存成功')
         print('-----------------------')
 
 plt.figure('PyTorch_CNNNet_Loss')

@@ -15,7 +15,7 @@ from my_dataset import CatDogDataset
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = torch.load(r'.\pth\CNNNet_19.pth')
+model = torch.load(r'.\pth\CNNNet_11.pth')
 accuracy_sum = []
 # transform = transforms.Compose(
 #     [
