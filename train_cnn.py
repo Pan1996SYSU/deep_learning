@@ -3,6 +3,7 @@ import copy
 import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
+from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
@@ -14,6 +15,7 @@ model = CNNNet()
 
 loss_func = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.3)
 train_loader = []
 model.to(device)
 
@@ -22,7 +24,8 @@ normalize = transforms.Normalize(
     std=[57.35260147, 57.33807308, 58.44982434])
 transform = transforms.Compose([
     transforms.ToTensor(),
-    # normalize,
+    transforms.Resize((401, 401)),
+    normalize,
 ])
 
 train_path = r"./DATA/cat-dog-all-data/test-dataset/train"
@@ -36,7 +39,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=5, shuffle=False)
 loss_count = []
 best_model_weights = copy.deepcopy(model.state_dict())
 best_acc = 0.0
-for epoch in range(12):
+for epoch in range(32):
     best_model_weights = copy.deepcopy(model.state_dict())
     for i, (images, annotations) in enumerate(dataloader):
         images = images.to(device)
