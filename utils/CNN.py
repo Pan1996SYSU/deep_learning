@@ -29,11 +29,9 @@ class CNNNet(torch.nn.Module):
             torch.nn.ReLU())
         # in_features, out_features
         self.mlp1 = torch.nn.Sequential(torch.nn.Linear(1470, 64),
-                                        torch.nn.BatchNorm1d(64),
-                                        torch.nn.ReLU())
+                                        torch.nn.Sigmoid())
         self.mlp2 = torch.nn.Sequential(torch.nn.Linear(64, 32),
-                                        torch.nn.BatchNorm1d(32),
-                                        torch.nn.ReLU())
+                                        torch.nn.Sigmoid())
         self.mlp3 = torch.nn.Sequential(torch.nn.Linear(32, 2),
                                         torch.nn.Softmax(dim=1))
 
