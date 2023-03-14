@@ -28,15 +28,21 @@ class CNNNet(torch.nn.Module):
             torch.nn.Conv2d(30, 30, 3, 2, 1), torch.nn.BatchNorm2d(30),
             torch.nn.ReLU())
         # in_features, out_features
-        self.mlp1 = torch.nn.Linear(1470, 64, torch.nn.ReLU())
-        self.mlp2 = torch.nn.Linear(64, 32, torch.nn.ReLU())
-        self.mlp3 = torch.nn.Linear(32, 2, torch.nn.Softmax())
+        self.mlp1 = torch.nn.Sequential(torch.nn.Linear(1470, 64),
+                                        torch.nn.BatchNorm1d(64),
+                                        torch.nn.ReLU())
+        self.mlp2 = torch.nn.Sequential(torch.nn.Linear(64, 32),
+                                        torch.nn.BatchNorm1d(32),
+                                        torch.nn.ReLU())
+        self.mlp3 = torch.nn.Sequential(torch.nn.Linear(32, 2),
+                                        torch.nn.Softmax(dim=1))
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
+
         x = self.conv3(x)
-        x = self.conv4(x)
+        x = self.conv4(x )
         x = self.conv5(x)
         x = self.conv6(x)
         x = self.mlp1(x.view(x.size(0), -1))
