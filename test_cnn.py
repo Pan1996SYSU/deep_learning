@@ -15,26 +15,21 @@ from my_dataset import CatDogDataset
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = torch.load(r'.\pth\CNNNet_11.pth')
+model = torch.load(r'.\pth\CNNNet_32.pth')
 accuracy_sum = []
-# transform = transforms.Compose(
-#     [
-#         transforms.ToTensor(),
-#         transforms.Resize((401, 401)),
-#     ])
+
 normalize = transforms.Normalize(
     mean=[106.35824316, 116.09900846, 124.61032364],
     std=[57.35260147, 57.33807308, 58.44982434])
-transform = transforms.Compose(
-    [
-        transforms.ToTensor(),
-        transforms.Resize((601, 601)),
-        # normalize,
-    ])
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Resize((401, 401)),
+    normalize,
+])
 
 test_path = r".\DATA\\cat-dog-all-data\test-dataset\test"
 dataset = CatDogDataset(root_dir=test_path, transform=transform)
-dataloader = DataLoader(dataset, batch_size=50, shuffle=False)
+dataloader = DataLoader(dataset, batch_size=100, shuffle=False)
 
 for i, (images, annotations) in enumerate(dataloader):
     images = images.to(device)
